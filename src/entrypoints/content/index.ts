@@ -25,6 +25,7 @@ function defineOverlay(ctx: ContentScriptContext) {
     name: "ext-command-bar",
     position: "modal",
     zIndex: 99999,
+    isolateEvents: true,
     onMount(container, _shadow, shadowHost) {
       const app = createApp(App);
       app.mount(container);

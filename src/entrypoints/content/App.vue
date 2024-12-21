@@ -13,8 +13,9 @@ const tabs = [
 </script>
 
 <template>
-  <div class="fixed inset-0 flex items-center justify-center bg-black/50">
-    <div class="w-[600px] bg-white rounded-xl shadow-lg overflow-hidden">
+  <div class="fixed inset-0 flex items-center justify-center pointer-events-none">
+    <div class="absolute inset-0 bg-black/50"></div>
+    <div class="w-[600px] bg-white rounded-xl shadow-lg overflow-hidden pointer-events-auto relative">
       <!-- Search Bar -->
       <div class="flex items-center px-4 py-3 border-b border-gray-100">
         <div class="text-gray-400">
@@ -59,23 +60,4 @@ const tabs = [
 </template>
 
 <style scoped>
-.container {
-  position: fixed;
-  right: 16px;
-  top: 16px;
-  width: 250px;
-  height: 200px;
-  pointer-events: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: white;
-  border-radius: 8px;
-  color: black;
-}
-
-img {
-  width: 72px;
-}
 </style>
