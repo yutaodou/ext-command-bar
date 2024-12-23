@@ -3,7 +3,9 @@ import { SwitchOption, TabOption } from "~/types";
 
 const getSwitchOptions = async (): Promise<TabOption[]> => {
   const tabs = await browser.tabs.query({ currentWindow: true, active: false });
-  return tabs.map((tab) => ({ type: "tab", tabId: tab.id, favIconUrl: tab.favIconUrl, title: tab.title, url: tab.url }));
+  return tabs
+    .sort((a, b) => b.lastAccessed! - a.lastAccessed!)
+    .map((tab) => ({ type: "tab", tabId: tab.id, favIconUrl: tab.favIconUrl, title: tab.title, url: tab.url }));
 };
 
 export default defineBackground({
