@@ -1,29 +1,17 @@
-export default defineBackground(() => {
-  console.log('Hello background!', { id: browser.runtime.id });
+import { onMessage, sendMessage } from "webext-bridge/background";
+
+export default defineBackground({
+  persistent: true,
+  type: "module",
+  main() {
+    browser.commands.onCommand.addListener(async (command) => {
+      if (command === "toggleCommandBar") {
+        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        if (tabs.length === 0) return;
+        console.log("send message", `content-scripts@${tabs[0]!.id}`);
+        const resp = await sendMessage("toggleCommandBar", "hello", `content-script@${tabs[0]!.id}`);
+        console.log("resp", resp);
+      }
+    });
+  },
 });
-
-browser.tabs.onCreated.addListener((tab) => {
-  showTable('created', tab);
-});
-
-browser.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  showTable('updated', tab);
-});
-
-
-browser.tabs.onRemoved.addListener((tabId, removeInfo) => {
-  console.log(`${tabId} removed: ${removeInfo.isWindowClosing}`);
-});
-
-browser.tabs.onHighlighted.addListener((tab) => {
-  console.log('tab highlighted', tab);
-});
-
-browser.tabs.onActivated.addListener((tab) => {
-  console.log('tab activated', tab);
-});
-
-
-const showTable = (event: string, tab: chrome.tabs.Tab) => {
-  console.log(`${event}: ${tab.title} ${tab.url} ${tab.id} ${tab.favIconUrl}`);
-};
