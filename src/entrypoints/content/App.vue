@@ -1,8 +1,8 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref } from "vue";
+import { nextTick, onMounted, ref, watch } from "vue";
 import { onMessage, sendMessage } from "webext-bridge/content-script";
 import "~/assets/tailwind.css";
-import { SwitchOption } from "~/types";
+import { SwitchOption, SearchOptionsData, SearchOptionsResponse } from "~/types";
 
 const searchQuery = ref("");
 const focusedIndex = ref(-1);
@@ -16,6 +16,7 @@ const toggleCommandBarDisplay = (options?: SwitchOption[]) => {
   searchInput.value?.focus();
   if (options) {
     tabs.value = options;
+    focusedIndex.value = options.length > 0 ? 0 : -1;
   }
 };
 onMessage("toggleCommandBar", (message) => {
@@ -69,6 +70,33 @@ const focusItem = (index: number) => {
   focusedIndex.value = index;
 };
 
+// Add debounce utility function
+const debounce = (fn: Function, delay: number) => {
+  let timeoutId: NodeJS.Timeout;
+  return (...args: any[]) => {
+    clearTimeout(timeoutId);
+    timeoutId = setTimeout(() => fn(...args), delay);
+  };
+};
+
+// Add search handler
+const handleSearch = async (term: string) => {
+  const response = await sendMessage("searchOptions", { term }, "background");
+  if (response) {
+    tabs.value = response.options;
+    // Reset focus to first item if we have results, otherwise clear focus
+    focusedIndex.value = response.options.length > 0 ? 0 : -1;
+  }
+};
+
+// Create debounced search
+const debouncedSearch = debounce(handleSearch, 100);
+
+// Watch for changes in searchQuery
+watch(searchQuery, (newValue) => {
+  debouncedSearch(newValue);
+});
+
 onMounted(() => {
   // Focus search input when component mounts
   searchInput.value?.focus();
@@ -100,6 +128,7 @@ onMounted(() => {
           v-model="searchQuery"
           placeholder="Search or Enter URL..."
           class="w-full px-3 py-2 text-gray-600 placeholder-gray-400 focus:outline-none"
+          autocomplete="off"
           @focus="focusedIndex = -1"
         />
         <button class="text-gray-400 hover:text-gray-600">
@@ -119,34 +148,27 @@ onMounted(() => {
           v-for="(tab, index) in tabs"
           :key="index"
           :class="[
-            'flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer',
-            focusedIndex === index ? 'bg-indigo-100' : '',
+            'flex items-center justify-between px-4 py-3 cursor-pointer',
+            focusedIndex === index ? 'bg-indigo-100' : 'hover:bg-gray-50',
           ]"
           tabindex="0"
           @focus="focusItem(index)"
           @click="selectTab(index)"
         >
-          <div class="flex items-center gap-3">
-            <span class="text-xl w-5 h-5 flex items-center justify-center">
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <span class="text-xl w-5 h-5 flex-shrink-0 flex items-center justify-center">
               <template v-if="tab.type === 'command'">
                 {{ tab.icon }}
               </template>
-              <img 
-                v-else-if="tab.favIconUrl" 
-                :src="tab.favIconUrl" 
-                class="w-4 h-4"
-                alt=""
-              />
+              <img v-else-if="tab.favIconUrl" :src="tab.favIconUrl" class="w-4 h-4" alt="" />
               <span v-else>📄</span>
             </span>
-            <span class="text-gray-700">
-              {{ tab.type === 'command' ? tab.name : 
-                 tab.type === 'history' ? tab.title :
-                 tab.title || 'Untitled Tab' }}
+            <span class="text-gray-700 truncate">
+              {{ tab.type === "command" ? tab.name : tab.type === "history" ? tab.title : tab.title || "Untitled Tab" }}
             </span>
           </div>
-          <button class="flex items-center gap-2 text-gray-400 hover:text-gray-600">
-            <span>Switch to Tab</span>
+          <button class="flex items-center gap-2 text-gray-400 hover:text-gray-600 flex-shrink-0">
+            <span>{{ tab.type === 'history' ? 'Open Page' : 'Switch to Tab' }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fill-rule="evenodd"

@@ -1,4 +1,5 @@
 export type TabOption = {
+  id: string;
   type: "tab";
   tabId?: number;
   favIconUrl?: string;
@@ -8,9 +9,10 @@ export type TabOption = {
 
 export type HistoryOption = {
   type: "history";
-  favIconUrl: string;
+  id: string;
   title: string;
   url: string;
+  favIconUrl?: string;
 };
 
 export type CommandOption = {
@@ -22,9 +24,17 @@ export type CommandOption = {
 export type SwitchOption = TabOption | HistoryOption | CommandOption;
 
 export type ToggleCommandBarMessage = {
-  options: TabOption[];
+  options: SwitchOption[];
 };
 
 export type SelectOptionMessage = {
   option: SwitchOption;
 };
+
+export interface SearchOptionsData {
+  term: string;
+}
+
+export interface SearchOptionsResponse {
+  options: SwitchOption[];
+}
