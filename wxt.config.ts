@@ -6,6 +6,9 @@ export default defineConfig({
   modules: ["@wxt-dev/module-vue"],
   outDir: "dist",
   srcDir: "src",
+  runner: {
+    disabled: true,
+  },
   manifest: {
     permissions: ["scripting"],
     commands: {

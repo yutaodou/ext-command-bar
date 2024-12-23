@@ -1,29 +1,45 @@
 <script lang="ts" setup>
+import { nextTick, onMounted, ref } from "vue";
+import { onMessage } from "webext-bridge/content-script";
 import "~/assets/tailwind.css";
-import { ref, onMounted, nextTick } from "vue";
+import { SwitchOption } from "~/types";
 
 const searchQuery = ref("");
 const focusedIndex = ref(-1);
 const searchInput = ref<HTMLInputElement | null>(null);
+const tabs = ref<SwitchOption[]>([]);
 
-const tabs = [
-  { icon: "📧", name: "Outlook", highlighted: true },
-  { icon: "🎨", name: "Untitled Easel" },
-  { icon: "𝕏", name: "Twitter" },
-  { icon: "📝", name: "Microsoft To Do" },
-  { icon: "💬", name: "Contact the Team" },
-];
+const toggleCommandBarDisplay = (options?: SwitchOption[]) => {
+  const commandBar = document.querySelector("ext-command-bar") as HTMLElement;
+  if (!commandBar) return;
+  commandBar.shadowRoot?.querySelector("#command-bar-container")?.classList.toggle("hidden");
+  searchInput.value?.focus();
+  if (options) {
+    tabs.value = options;
+  }
+};
+onMessage("toggleCommandBar", (message) => {
+  toggleCommandBarDisplay(message.data?.options as SwitchOption[]);
+});
 
 const selectTab = (index: number) => {
-  // TODO: Implement actual tab switching logic
-  console.log(`Switching to tab: ${tabs[index].name}`);
+  console.log(browser.runtime.id);
+  const tab = tabs.value[index];
+  const displayName = tab.type === 'command' ? tab.name : 
+                     (tab.type === 'history' ? tab.title :
+                     tab.title || 'Untitled Tab');
+  console.log(`Switching to tab: ${displayName}`);
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
   switch (event.key) {
+    case "Escape":
+      event.preventDefault();
+      toggleCommandBarDisplay();
+      break;
     case "ArrowDown":
       event.preventDefault();
-      if (focusedIndex.value === tabs.length - 1) {
+      if (focusedIndex.value === tabs.value.length - 1) {
         focusedIndex.value = 0;
       } else {
         focusedIndex.value++;
@@ -62,7 +78,7 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="fixed inset-0 flex items-center justify-center">
+  <div id="command-bar-container" class="fixed inset-0 flex items-center justify-center hidden">
     <div class="absolute inset-0 bg-black/50 pointer-events-auto"></div>
     <div
       class="w-[600px] bg-white rounded-xl shadow-lg overflow-hidden pointer-events-auto relative"
@@ -80,6 +96,7 @@ onMounted(() => {
           </svg>
         </div>
         <input
+          id="search-input"
           ref="searchInput"
           type="text"
           v-model="searchQuery"
@@ -102,19 +119,33 @@ onMounted(() => {
       <div class="max-h-[400px] overflow-y-auto">
         <div
           v-for="(tab, index) in tabs"
-          :key="tab.name"
+          :key="index"
           :class="[
             'flex items-center justify-between px-4 py-3 hover:bg-gray-50 cursor-pointer',
-            tab.highlighted ? 'bg-indigo-100' : '',
-            focusedIndex === index ? 'bg-blue-100 outline-none ring-2 ring-blue-400' : '',
+            focusedIndex === index ? 'bg-indigo-100' : '',
           ]"
           tabindex="0"
           @focus="focusItem(index)"
           @click="selectTab(index)"
         >
           <div class="flex items-center gap-3">
-            <span class="text-xl">{{ tab.icon }}</span>
-            <span class="text-gray-700">{{ tab.name }}</span>
+            <span class="text-xl w-5 h-5 flex items-center justify-center">
+              <template v-if="tab.type === 'command'">
+                {{ tab.icon }}
+              </template>
+              <img 
+                v-else-if="tab.favIconUrl" 
+                :src="tab.favIconUrl" 
+                class="w-4 h-4"
+                alt=""
+              />
+              <span v-else>📄</span>
+            </span>
+            <span class="text-gray-700">
+              {{ tab.type === 'command' ? tab.name : 
+                 tab.type === 'history' ? tab.title :
+                 tab.title || 'Untitled Tab' }}
+            </span>
           </div>
           <button class="flex items-center gap-2 text-gray-400 hover:text-gray-600">
             <span>Switch to Tab</span>

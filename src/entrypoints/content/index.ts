@@ -6,14 +6,17 @@ import "./reset.css";
 export default defineContentScript({
   matches: ["*://*/*"],
   cssInjectionMode: "ui",
+  matchAboutBlank: true,
+  matchOriginAsFallback: true,
+  runAt: "document_idle",
+  world: "ISOLATED",
 
   async main(ctx) {
     const ui = await defineOverlay(ctx);
 
-    // Mount initially
     ui.mount();
+    console.log(browser.runtime.id);
 
-    // Re-mount when page changes
     ctx.addEventListener(window, "wxt:locationchange", (event) => {
       ui.mount();
     });
