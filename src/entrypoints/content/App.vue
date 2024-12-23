@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { nextTick, onMounted, ref } from "vue";
-import { onMessage } from "webext-bridge/content-script";
+import { onMessage, sendMessage } from "webext-bridge/content-script";
 import "~/assets/tailwind.css";
 import { SwitchOption } from "~/types";
 
@@ -23,12 +23,10 @@ onMessage("toggleCommandBar", (message) => {
 });
 
 const selectTab = (index: number) => {
-  console.log(browser.runtime.id);
   const tab = tabs.value[index];
-  const displayName = tab.type === 'command' ? tab.name : 
-                     (tab.type === 'history' ? tab.title :
-                     tab.title || 'Untitled Tab');
-  console.log(`Switching to tab: ${displayName}`);
+  console.log("selectTab", tab);
+  sendMessage("selectOption", { option: tab });
+  toggleCommandBarDisplay();
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {

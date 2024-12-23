@@ -1,5 +1,6 @@
 export type TabOption = {
   type: "tab";
+  tabId?: number;
   favIconUrl?: string;
   title?: string;
   url?: string;
@@ -22,4 +23,8 @@ export type SwitchOption = TabOption | HistoryOption | CommandOption;
 
 export type ToggleCommandBarMessage = {
   options: TabOption[];
+};
+
+export type SelectOptionMessage = {
+  option: SwitchOption;
 };
