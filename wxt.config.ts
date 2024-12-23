@@ -10,7 +10,7 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
-    permissions: ["scripting", "tabs", "history"],
+    permissions: ["scripting", "tabs", "history", "bookmarks"],
     commands: {
       toggleCommandBar: {
         description: "Toggle the command bar",

@@ -21,7 +21,15 @@ export type CommandOption = {
   icon: string;
 };
 
-export type SwitchOption = TabOption | HistoryOption | CommandOption;
+export type BookmarkOption = {
+  type: "bookmark";
+  id: string;
+  title: string;
+  url: string;
+  favIconUrl?: string;
+};
+
+export type SwitchOption = TabOption | HistoryOption | CommandOption | BookmarkOption;
 
 export type ToggleCommandBarMessage = {
   options: SwitchOption[];

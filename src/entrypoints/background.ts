@@ -26,6 +26,22 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
     }))
     .slice(0, MAX_RESULTS);
 
+  // Search bookmarks
+  const bookmarks = await chrome.bookmarks.search({
+    query: searchTerm
+  });
+
+  const bookmarkOptions = bookmarks
+    .filter(bookmark => bookmark.url) // Only include bookmarks with URLs (exclude folders)
+    .map(bookmark => ({
+      id: bookmark.id,
+      type: "bookmark" as const,
+      title: bookmark.title || "Untitled",
+      url: bookmark.url || "",
+      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`
+    }))
+    .slice(0, MAX_RESULTS);
+
   const history = await chrome.history.search({
     text: searchTerm,
     maxResults: MAX_RESULTS,
@@ -43,7 +59,7 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
 
   // Combine results and remove duplicates based on URL
   const seenUrls = new Set<string>([currentUrl]); // Initialize with current tab's URL
-  return [...filteredTabs, ...historyOptions]
+  return [...filteredTabs, ...bookmarkOptions, ...historyOptions]
     .filter(item => {
       if (seenUrls.has(item.url)) {
         return false;
@@ -71,7 +87,7 @@ export default defineBackground({
       const { option } = message.data;
       if (option.type === "tab") {
         browser.tabs.update(option.tabId, { active: true });
-      } else if (option.type === "history") {
+      } else if (option.type === "history" || option.type === "bookmark") {
         // Get current tab to determine where to create the new tab
         const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
         if (currentTab?.index !== undefined) {

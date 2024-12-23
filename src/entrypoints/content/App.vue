@@ -129,6 +129,7 @@ onMounted(() => {
           placeholder="Search or Enter URL..."
           class="w-full px-3 py-2 text-gray-600 placeholder-gray-400 focus:outline-none"
           autocomplete="off"
+          spellcheck="false"
           @focus="focusedIndex = -1"
         />
         <button class="text-gray-400 hover:text-gray-600">
@@ -168,7 +169,11 @@ onMounted(() => {
             </span>
           </div>
           <button class="flex items-center gap-2 text-gray-400 hover:text-gray-600 flex-shrink-0">
-            <span>{{ tab.type === 'history' ? 'Open Page' : 'Switch to Tab' }}</span>
+            <span>{{ 
+              tab.type === 'history' ? 'Open Page' : 
+              tab.type === 'bookmark' ? 'Open Bookmark' :
+              'Switch to Tab' 
+            }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fill-rule="evenodd"
