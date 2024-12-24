@@ -8,6 +8,7 @@ const searchQuery = ref("");
 const focusedIndex = ref(-1);
 const searchInput = ref<HTMLInputElement | null>(null);
 const tabs = ref<SwitchOption[]>([]);
+const isComposing = ref(false);
 
 const toggleCommandBarDisplay = (options?: SwitchOption[]) => {
   const commandBar = document.querySelector("ext-command-bar") as HTMLElement;
@@ -31,6 +32,8 @@ const selectTab = (index: number) => {
 };
 
 const handleKeyDown = (event: KeyboardEvent) => {
+  if (isComposing.value) return;
+
   switch (event.key) {
     case "Escape":
       event.preventDefault();
@@ -57,7 +60,6 @@ const handleKeyDown = (event: KeyboardEvent) => {
       }
       break;
     case "Enter":
-    case " ": // Space key
       event.preventDefault();
       if (focusedIndex.value >= 0) {
         selectTab(focusedIndex.value);
@@ -131,6 +133,8 @@ onMounted(() => {
           autocomplete="off"
           spellcheck="false"
           @focus="focusedIndex = -1"
+          @compositionstart="isComposing = true"
+          @compositionend="isComposing = false"
         />
         <button class="text-gray-400 hover:text-gray-600">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
