@@ -10,7 +10,7 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
 
   const tabs = await chrome.tabs.query({ currentWindow: true, active: false });
 
-  const filteredTabs = tabs
+  const filteredTabs = orderBy(tabs, ["lastAccessed"], ["desc"])
     .filter((tab) => {
       const title = (tab.title || "").toLowerCase();
       const url = (tab.url || "").toLowerCase();
@@ -28,39 +28,38 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
 
   // Search bookmarks
   const bookmarks = await chrome.bookmarks.search({
-    query: searchTerm
+    query: searchTerm,
   });
 
   const bookmarkOptions = bookmarks
-    .filter(bookmark => bookmark.url) // Only include bookmarks with URLs (exclude folders)
-    .map(bookmark => ({
+    .filter((bookmark) => bookmark.url) // Only include bookmarks with URLs (exclude folders)
+    .map((bookmark) => ({
       id: bookmark.id,
       type: "bookmark" as const,
       title: bookmark.title || "Untitled",
       url: bookmark.url || "",
-      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`
+      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`,
     }))
     .slice(0, MAX_RESULTS);
 
   const history = await chrome.history.search({
     text: searchTerm,
-    maxResults: MAX_RESULTS,
+    maxResults: MAX_RESULTS * 2,
     startTime: 0,
   });
 
-  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"])
-    .map((item) => ({
-      id: item.id,
-      type: "history" as const,
-      title: item.title || "Untitled",
-      url: item.url || "",
-      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(item.url || "").hostname}`
-    }));
+  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
+    id: item.id,
+    type: "history" as const,
+    title: item.title || "Untitled",
+    url: item.url || "",
+    favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(item.url || "").hostname}`,
+  }));
 
   // Combine results and remove duplicates based on URL
   const seenUrls = new Set<string>([currentUrl]); // Initialize with current tab's URL
   return [...filteredTabs, ...bookmarkOptions, ...historyOptions]
-    .filter(item => {
+    .filter((item) => {
       if (seenUrls.has(item.url)) {
         return false;
       }
