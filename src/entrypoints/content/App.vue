@@ -172,7 +172,7 @@ onMounted(() => {
               {{ tab.type === "command" ? tab.name : tab.type === "history" ? tab.title : tab.title || "Untitled Tab" }}
             </span>
           </div>
-          <button class="flex items-center gap-2 text-gray-400 hover:text-gray-600 flex-shrink-0">
+          <button class="flex items-center gap-3 pl-4 text-gray-400 hover:text-gray-600 flex-shrink-0">
             <span>{{ 
               tab.type === 'history' ? 'Open Page' : 
               tab.type === 'bookmark' ? 'Open Bookmark' :

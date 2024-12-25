@@ -15,7 +15,6 @@ export default defineContentScript({
     const ui = await defineOverlay(ctx);
 
     ui.mount();
-    console.log(browser.runtime.id);
 
     ctx.addEventListener(window, "wxt:locationchange", (event) => {
       ui.mount();
@@ -27,6 +26,9 @@ function defineOverlay(ctx: ContentScriptContext) {
   return createShadowRootUi(ctx, {
     name: "ext-command-bar",
     position: "modal",
+    anchor: "body",
+    append: "after",
+    mode: "open",
     zIndex: 99999,
     isolateEvents: true,
     onMount(container, _shadow, shadowHost) {
