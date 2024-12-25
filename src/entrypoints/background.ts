@@ -7,6 +7,7 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
   // Get current tab first
   const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const currentUrl = currentTab?.url || "";
+  const currentTitle = currentTab?.title || "";
 
   const tabs = await chrome.tabs.query({ currentWindow: true, active: false });
 
@@ -57,13 +58,14 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
   }));
 
   // Combine results and remove duplicates based on URL
-  const seenUrls = new Set<string>([currentUrl]); // Initialize with current tab's URL
+  const seen = new Set<string>([currentUrl, currentTitle]); // Initialize with current tab's URL
   return [...filteredTabs, ...bookmarkOptions, ...historyOptions]
     .filter((item) => {
-      if (seenUrls.has(item.url)) {
+      if (seen.has(item.url) || seen.has(item.title)) {
         return false;
       }
-      seenUrls.add(item.url);
+      seen.add(item.url);
+      seen.add(item.title);
       return true;
     })
     .slice(0, MAX_RESULTS);
