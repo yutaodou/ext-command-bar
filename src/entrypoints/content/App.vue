@@ -50,7 +50,7 @@ const handleKeyDown = (event: KeyboardEvent) => {
     case "ArrowUp":
       event.preventDefault();
       if (focusedIndex.value === 0) {
-        focusedIndex.value = -1;
+        focusedIndex.value = tabs.value.length - 1;
         // Use nextTick to ensure reliable focus
         nextTick(() => {
           searchInput.value?.focus();

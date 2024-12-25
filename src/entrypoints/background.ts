@@ -71,6 +71,24 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
     .slice(0, MAX_RESULTS);
 };
 
+const ensureScriptsLoaded = async (tabId: number | undefined) => {
+  if (tabId === undefined) return;
+
+  // Check if the command bar element exists
+  const [{ result }] = await browser.scripting.executeScript({
+    target: { tabId },
+    func: () => !!document.querySelector("ext-command-bar"),
+  });
+
+  // If element doesn't exist, inject the content script
+  if (!result) {
+    await browser.scripting.executeScript({
+      target: { tabId },
+      files: ["content-scripts/content.js"],
+    });
+  }
+};
+
 export default defineBackground({
   persistent: true,
   type: "module",
@@ -79,6 +97,10 @@ export default defineBackground({
       if (command === "toggleCommandBar") {
         const tabs = await browser.tabs.query({ active: true, currentWindow: true });
         if (tabs.length === 0) return;
+
+        // Ensure content script is loaded before sending message
+        await ensureScriptsLoaded(tabs[0]!.id);
+
         const target = `content-script@${tabs[0]!.id}`;
         await sendMessage("toggleCommandBar", { options: await getSwitchOptions() }, target);
       }
