@@ -1,6 +1,6 @@
 {
-  "name": "wxt-vue-starter",
-  "description": "manifest.json description",
+  "name": "yes-commander",
+  "description": "Yes Commander",
   "private": true,
   "version": "0.0.0",
   "type": "module",

@@ -10,6 +10,10 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
+    name: "Yes Commander",
+    description: "Yes Commander",
+    version: "0.0.1",
+    host_permissions: ["<all_urls>"],
     permissions: ["scripting", "tabs", "history", "bookmarks"],
     commands: {
       toggleCommandBar: {
