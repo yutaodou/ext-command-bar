@@ -19,6 +19,8 @@ export type CommandOption = {
   type: "command";
   name: string;
   icon: string;
+  action: "search";
+  searchTerm?: string;
 };
 
 export type BookmarkOption = {

@@ -14,7 +14,7 @@ export default defineConfig({
     description: "Yes Commander",
     version: "0.0.1",
     host_permissions: ["<all_urls>"],
-    permissions: ["scripting", "tabs", "history", "bookmarks"],
+    permissions: ["scripting", "tabs", "history", "bookmarks","search"],
     commands: {
       toggleCommandBar: {
         description: "Toggle the command bar",

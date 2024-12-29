@@ -2,7 +2,7 @@
 import { nextTick, onMounted, ref, watch } from "vue";
 import { onMessage, sendMessage } from "webext-bridge/content-script";
 import "~/assets/tailwind.css";
-import { SwitchOption, SearchOptionsData, SearchOptionsResponse } from "~/types";
+import { SwitchOption } from "~/types";
 
 const searchQuery = ref("");
 const focusedIndex = ref(-1);
