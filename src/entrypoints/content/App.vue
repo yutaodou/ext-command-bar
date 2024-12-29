@@ -14,6 +14,7 @@ const toggleCommandBarDisplay = (options?: SwitchOption[]) => {
   const commandBar = document.querySelector("ext-command-bar") as HTMLElement;
   if (!commandBar) return;
   commandBar.shadowRoot?.querySelector("#command-bar-container")?.classList.toggle("hidden");
+  searchQuery.value = "";
   searchInput.value?.focus();
   if (options) {
     tabs.value = options;
