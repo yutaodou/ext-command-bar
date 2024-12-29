@@ -3,6 +3,23 @@ import { onMessage, sendMessage } from "webext-bridge/background";
 import { SwitchOption } from "~/types";
 
 const MAX_RESULTS = 5;
+const isSystemPage = (url: string): boolean => {
+  const systemProtocols = [
+    'chrome://',
+    'chrome-extension://',
+    'edge://',
+    'brave://',
+    'about:',
+    'chrome-search://',
+    'chrome-untrusted://',
+    'browser://',
+    'moz-extension://',
+    "firefox:"
+  ];
+
+  return systemProtocols.some((protocol) => url.toLowerCase().startsWith(protocol));
+};
+
 const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
   // Get current tab first
   const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -14,6 +31,10 @@ const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]
     .filter((tab) => {
       const title = (tab.title || "").toLowerCase();
       const url = (tab.url || "").toLowerCase();
+      // Ignore system pages
+      if (!url || isSystemPage(url)) {
+        return false;
+      }
       return tab.id !== undefined && (title.includes(searchTerm) || url.includes(searchTerm));
     })
     .map((tab) => ({
