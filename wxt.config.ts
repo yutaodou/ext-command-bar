@@ -19,8 +19,8 @@ export default defineConfig({
       toggleCommandBar: {
         description: "Toggle the command bar",
         suggested_key: {
-          default: "Alt+T",
-          mac: "Alt+T",
+          default: "Ctrl+K",
+          mac: "Command+K",
         },
       },
     },
