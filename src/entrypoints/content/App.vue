@@ -174,11 +174,7 @@ onMounted(() => {
             </span>
           </div>
           <button class="flex items-center gap-3 pl-4 text-gray-400 hover:text-gray-600 flex-shrink-0">
-            <span>{{ 
-              tab.type === 'history' ? 'Open Page' : 
-              tab.type === 'bookmark' ? 'Open Bookmark' :
-              'Switch to Tab' 
-            }}</span>
+            <span>{{ tab.actionText }}</span>
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
               <path
                 fill-rule="evenodd"

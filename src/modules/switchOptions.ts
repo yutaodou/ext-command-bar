@@ -70,6 +70,7 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
       title: tab.title || "Untitled",
       url: tab.url || "",
       favIconUrl: tab.favIconUrl,
+      actionText: "Switch to Tab",
     }))
     .slice(0, MAX_RESULTS);
 
@@ -86,6 +87,7 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
       title: bookmark.title || "Untitled",
       url: bookmark.url || "",
       favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`,
+      actionText: "Open Bookmark",
     }))
     .slice(0, MAX_RESULTS);
 
@@ -101,6 +103,7 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
     title: item.title || "Untitled",
     url: item.url || "",
     favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(item.url || "").hostname}`,
+    actionText: "Open Page",
   }));
 
   // Combine results and remove duplicates based on URL
@@ -123,6 +126,7 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
         name: `Search for "${searchTerm}"`,
         icon: "🔍",
         action: "search",
+        actionText: "Search",
         searchTerm,
       },
     ];

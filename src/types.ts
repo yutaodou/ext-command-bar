@@ -5,6 +5,7 @@ export type TabOption = {
   favIconUrl?: string;
   title?: string;
   url?: string;
+  actionText: string;
 };
 
 export type HistoryOption = {
@@ -13,6 +14,7 @@ export type HistoryOption = {
   title: string;
   url: string;
   favIconUrl?: string;
+  actionText: string;
 };
 
 export type CommandOption = {
@@ -21,6 +23,7 @@ export type CommandOption = {
   icon: string;
   action: "search";
   searchTerm?: string;
+  actionText: string;
 };
 
 export type BookmarkOption = {
@@ -29,6 +32,7 @@ export type BookmarkOption = {
   title: string;
   url: string;
   favIconUrl?: string;
+  actionText: string;
 };
 
 export type SwitchOption = TabOption | HistoryOption | CommandOption | BookmarkOption;
