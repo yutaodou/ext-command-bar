@@ -8,7 +8,7 @@ export default defineContentScript({
   cssInjectionMode: "ui",
   matchAboutBlank: true,
   matchOriginAsFallback: true,
-  runAt: "document_idle",
+  runAt: "document_start",
   world: "ISOLATED",
 
   async main(ctx) {
