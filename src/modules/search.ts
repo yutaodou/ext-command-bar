@@ -1,10 +1,16 @@
 import { FilterableOption } from "@/types";
-import MiniSearch from "minisearch";
+import MiniSearch, { SearchResult } from "minisearch";
 
 const TYPE_ORDER = {
   tab: 0,
   history: 1,
   bookmark: 2,
+};
+
+const sortByType = (a: SearchResult, b: SearchResult): number => {
+  const typeOrderDiff = TYPE_ORDER[a.type as keyof typeof TYPE_ORDER] - TYPE_ORDER[b.type as keyof typeof TYPE_ORDER];
+  if (typeOrderDiff !== 0) return typeOrderDiff;
+  return b.score - a.score;
 };
 
 export const search = (term: string, filterOptions: FilterableOption[], maxResults: number = 10) => {
@@ -22,28 +28,22 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
         search: 2,
         hash: 1,
       },
-      fuzzy: 1,
+      prefix: true,
+      combineWith: "AND",
+      fuzzy: 0.2,
     },
   });
   const docs = filterOptions.map(convertToDoc);
   miniSearch.addAll(docs);
-
   const searchResults = miniSearch.search(term);
 
-  // Create a map of original options for quick lookup
-  const optionsMap = new Map(filterOptions.map((opt) => [opt.id, opt]));
+  const deduplicated = deduplicateByUrl(searchResults);
+  const sorted = deduplicated.sort(sortByType).slice(0, maxResults);
 
-  return searchResults
-    .sort((a, b) => {
-      // First sort by type order
-      const typeOrderDiff =
-        TYPE_ORDER[a.type as keyof typeof TYPE_ORDER] - TYPE_ORDER[b.type as keyof typeof TYPE_ORDER];
-      if (typeOrderDiff !== 0) return typeOrderDiff;
-      // Then sort by score
-      return b.score - a.score;
-    })
-    .slice(0, maxResults)
-    .map((result) => optionsMap.get(result.id)!);
+  debug(sorted);
+
+  const optionsMap = new Map(filterOptions.map((opt) => [opt.id, opt]));
+  return sorted.map((result) => optionsMap.get(result.id)!);
 };
 
 const convertToDoc = (option: FilterableOption) => {
@@ -56,4 +56,25 @@ const convertToDoc = (option: FilterableOption) => {
     search: optionUrl.search,
     hash: optionUrl.hash,
   };
+};
+
+const debug = (result: SearchResult[]) => {
+  console.log(`Result count:${result.length}`);
+  result.forEach((item) => {
+    console.log(`  ${item.score} ${item.type} ${item.title} ${item.url}`);
+  });
+};
+
+const deduplicateByUrl = (result: SearchResult[]): SearchResult[] => {
+  const seenUrl = new Set();
+  const uniq: SearchResult[] = [];
+  result.forEach((item) => {
+    if (seenUrl.has(item.url)) {
+      return;
+    }
+    seenUrl.add(item.url);
+    uniq.push(item);
+  });
+
+  return uniq;
 };

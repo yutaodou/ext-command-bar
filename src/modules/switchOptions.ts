@@ -15,10 +15,8 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
   if (isTabOption(option)) {
     await browser.tabs.update(option.tabId!, { active: true });
   } else if (option.type === "history" || option.type === "bookmark") {
-    // Get current tab to determine where to create the new tab
     const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
     if (currentTab?.index !== undefined) {
-      // Create new tab next to current tab
       await browser.tabs.create({
         url: option.url,
         active: true,
@@ -34,10 +32,77 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 };
 
 export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
-  // Get current tab first
   const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const currentUrl = currentTab?.url || "";
 
+  const tabOptions = await getTabOptions();
+  const bookmarkOptions = await getBookmarkOptions();
+  const historyOptions = await getHistoryOptions();
+
+  const options = [...tabOptions, ...bookmarkOptions, ...historyOptions];
+  const results: FilterableOption[] = search(searchTerm, options, 100);
+
+  const seen = new Set<string>([currentUrl]);
+  const combinedResults = results
+    .filter((item) => {
+      if (seen.has(item.url) || seen.has(item.title)) {
+        return false;
+      }
+      seen.add(item.url);
+      return true;
+    })
+    .slice(0, MAX_RESULTS);
+
+  if (combinedResults.length === 0 && searchTerm.trim()) {
+    return [buildSearchCommandOptions(searchTerm)];
+  }
+
+  return combinedResults as SwitchOption[];
+};
+
+const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
+  type: "command",
+  name: `Search for "${searchTerm}"`,
+  icon: "🔍",
+  action: "search",
+  actionText: "Search",
+  searchTerm,
+});
+
+const getHistoryOptions = async () => {
+  const history = await chrome.history.search({
+    text: "",
+    maxResults: 200,
+    startTime: 0,
+  });
+
+  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
+    id: uuid(),
+    type: "history" as const,
+    title: item.title || "Untitled",
+    url: item.url || "",
+    favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(item.url || "").hostname}`,
+    actionText: "Open Page",
+  }));
+  return historyOptions;
+};
+
+const getBookmarkOptions = async () => {
+  const bookmarks = await chrome.bookmarks.search({});
+  const bookmarkOptions = bookmarks
+    .filter((bookmark) => bookmark.url)
+    .map((bookmark) => ({
+      id: uuid(),
+      type: "bookmark" as const,
+      title: bookmark.title || "Untitled",
+      url: bookmark.url || "",
+      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`,
+      actionText: "Open Bookmark",
+    }));
+  return bookmarkOptions;
+};
+
+const getTabOptions = async () => {
   const tabs = await chrome.tabs.query({ currentWindow: true, active: false });
 
   const tabOptions = orderBy(tabs, ["lastAccessed"], ["desc"])
@@ -53,63 +118,5 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
       favIconUrl: tab.favIconUrl,
       actionText: "Switch to Tab",
     }));
-
-  // Search bookmarks
-  const bookmarks = await chrome.bookmarks.search({});
-  const bookmarkOptions = bookmarks
-    .filter((bookmark) => bookmark.url) // Only include bookmarks with URLs (exclude folders)
-    .map((bookmark) => ({
-      id: uuid(),
-      type: "bookmark" as const,
-      title: bookmark.title || "Untitled",
-      url: bookmark.url || "",
-      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`,
-      actionText: "Open Bookmark",
-    }));
-
-  const history = await chrome.history.search({
-    text: "",
-    maxResults: 200,
-    startTime: 0,
-  });
-
-  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
-    id: uuid(),
-    type: "history" as const,
-    title: item.title || "Untitled",
-    url: item.url || "",
-    favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(item.url || "").hostname}`,
-    actionText: "Open Page",
-  }));
-
-  const options = [...tabOptions, ...bookmarkOptions, ...historyOptions];
-  const results: FilterableOption[] = search(searchTerm, options, 100);
-
-  // Combine results and remove duplicates based on URL
-  const seen = new Set<string>([currentUrl]); // Initialize with current tab's URL
-  const combinedResults = results
-    .filter((item) => {
-      if (seen.has(item.url) || seen.has(item.title)) {
-        return false;
-      }
-      seen.add(item.url);
-      return true;
-    })
-    .slice(0, MAX_RESULTS);
-
-  // If no results and we have a search term, add search command
-  if (combinedResults.length === 0 && searchTerm.trim()) {
-    return [
-      {
-        type: "command",
-        name: `Search for "${searchTerm}"`,
-        icon: "🔍",
-        action: "search",
-        actionText: "Search",
-        searchTerm,
-      },
-    ];
-  }
-
-  return combinedResults as SwitchOption[];
+  return tabOptions;
 };
