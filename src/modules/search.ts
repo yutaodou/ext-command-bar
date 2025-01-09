@@ -40,8 +40,6 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
   const deduplicated = deduplicateByUrl(searchResults);
   const sorted = deduplicated.sort(sortByType).slice(0, maxResults);
 
-  debug(sorted);
-
   const optionsMap = new Map(filterOptions.map((opt) => [opt.id, opt]));
   return sorted.map((result) => optionsMap.get(result.id)!);
 };
