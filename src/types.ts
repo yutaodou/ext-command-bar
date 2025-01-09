@@ -1,18 +1,28 @@
-export type TabOption = {
+export type FilterableOption = {
+  id: string;
+  title: string;
+  url: string;
+  type: string;
+};
+
+export type TabOption = FilterableOption & {
   id: string;
   type: "tab";
   tabId?: number;
   favIconUrl?: string;
-  title?: string;
-  url?: string;
   actionText: string;
 };
 
-export type HistoryOption = {
-  type: "history";
+export type HistoryOption = FilterableOption & {
   id: string;
-  title: string;
-  url: string;
+  type: "history";
+  favIconUrl?: string;
+  actionText: string;
+};
+
+export type BookmarkOption = FilterableOption & {
+  type: "bookmark";
+  id: string;
   favIconUrl?: string;
   actionText: string;
 };
@@ -23,15 +33,6 @@ export type CommandOption = {
   icon: string;
   action: "search";
   searchTerm?: string;
-  actionText: string;
-};
-
-export type BookmarkOption = {
-  type: "bookmark";
-  id: string;
-  title: string;
-  url: string;
-  favIconUrl?: string;
   actionText: string;
 };
 

@@ -1,23 +1,10 @@
-import { SelectOptionMessage, SwitchOption, TabOption } from "@/types";
+import { FilterableOption, SelectOptionMessage, SwitchOption, TabOption } from "@/types";
 import { orderBy } from "lodash";
+import { isSystemPage } from "./utils";
+import { v4 as uuid } from "uuid";
+import { search } from "./search";
 
 const MAX_RESULTS = 5;
-const isSystemPage = (url: string): boolean => {
-  const systemProtocols = [
-    "chrome://",
-    "chrome-extension://",
-    "edge://",
-    "brave://",
-    "about:",
-    "chrome-search://",
-    "chrome-untrusted://",
-    "browser://",
-    "moz-extension://",
-    "firefox:",
-  ];
-
-  return systemProtocols.some((protocol) => url.toLowerCase().startsWith(protocol));
-};
 
 export const isTabOption = (option: SwitchOption): option is TabOption => {
   return option.type === "tab";
@@ -53,52 +40,41 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
 
   const tabs = await chrome.tabs.query({ currentWindow: true, active: false });
 
-  const filteredTabs = orderBy(tabs, ["lastAccessed"], ["desc"])
+  const tabOptions = orderBy(tabs, ["lastAccessed"], ["desc"])
     .filter((tab) => {
-      const title = (tab.title || "").toLowerCase();
-      const url = (tab.url || "").toLowerCase();
-      // Ignore system pages
-      if (!url || isSystemPage(url)) {
-        return false;
-      }
-      return tab.id !== undefined && (title.includes(searchTerm) || url.includes(searchTerm));
+      return tab.id && !isSystemPage(tab);
     })
     .map((tab) => ({
-      id: tab.id?.toString() || new Date().getTime().toString(),
+      id: uuid(),
       tabId: tab.id,
       type: "tab" as const,
       title: tab.title || "Untitled",
       url: tab.url || "",
       favIconUrl: tab.favIconUrl,
       actionText: "Switch to Tab",
-    }))
-    .slice(0, MAX_RESULTS);
+    }));
 
   // Search bookmarks
-  const bookmarks = await chrome.bookmarks.search({
-    query: searchTerm,
-  });
-
+  const bookmarks = await chrome.bookmarks.search({});
   const bookmarkOptions = bookmarks
     .filter((bookmark) => bookmark.url) // Only include bookmarks with URLs (exclude folders)
     .map((bookmark) => ({
-      id: bookmark.id,
+      id: uuid(),
       type: "bookmark" as const,
       title: bookmark.title || "Untitled",
       url: bookmark.url || "",
       favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`,
       actionText: "Open Bookmark",
-    }))
-    .slice(0, MAX_RESULTS);
+    }));
 
   const history = await chrome.history.search({
-    text: searchTerm,
-    maxResults: MAX_RESULTS * 2,
+    text: "",
+    maxResults: 200,
     startTime: 0,
   });
 
   const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
-    id: item.id,
+    id: uuid(),
     type: "history" as const,
     title: item.title || "Untitled",
     url: item.url || "",
@@ -106,9 +82,12 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
     actionText: "Open Page",
   }));
 
+  const options = [...tabOptions, ...bookmarkOptions, ...historyOptions];
+  const results: FilterableOption[] = search(searchTerm, options, 100);
+
   // Combine results and remove duplicates based on URL
   const seen = new Set<string>([currentUrl]); // Initialize with current tab's URL
-  const combinedResults = [...filteredTabs, ...bookmarkOptions, ...historyOptions]
+  const combinedResults = results
     .filter((item) => {
       if (seen.has(item.url) || seen.has(item.title)) {
         return false;
@@ -132,5 +111,5 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
     ];
   }
 
-  return combinedResults;
+  return combinedResults as SwitchOption[];
 };
