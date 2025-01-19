@@ -28,7 +28,6 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
         search: 2,
         hash: 1,
       },
-      prefix: true,
       combineWith: "AND",
       fuzzy: 0.2,
     },

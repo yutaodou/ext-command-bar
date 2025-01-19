@@ -28,7 +28,7 @@ function defineOverlay(ctx: ContentScriptContext) {
     position: "modal",
     anchor: "body",
     append: "after",
-    mode: "open",
+    mode: "closed",
     zIndex: 99999,
     isolateEvents: true,
     onMount(container, _shadow, shadowHost) {
