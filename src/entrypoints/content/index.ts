@@ -31,6 +31,7 @@ function defineOverlay(ctx: ContentScriptContext) {
     mode: "closed",
     zIndex: 99999,
     isolateEvents: true,
+    css: "html {font-size: 16px;}",
     onMount(container, _shadow, shadowHost) {
       const app = createApp(App);
       app.mount(container);

@@ -7,7 +7,7 @@ import { SwitchOption } from "~/types";
 const searchQuery = ref("");
 const focusedIndex = ref(-1);
 const searchInput = ref<HTMLInputElement | null>(null);
-const container = ref<HTMLDivElement|null>(null);
+const container = ref<HTMLDivElement | null>(null);
 const tabs = ref<SwitchOption[]>([]);
 const isComposing = ref(false);
 
@@ -107,16 +107,27 @@ onMounted(() => {
 </script>
 
 <template>
-  <div id="command-bar-container" ref="container" class="fixed inset-0 flex items-center justify-center hidden" style="font-size: 16px;">
+  <div
+    id="command-bar-container"
+    ref="container"
+    class="fixed inset-0 flex items-center justify-center hidden"
+    style="font-size: 16px"
+  >
     <div class="absolute inset-0 bg-black/50 pointer-events-auto"></div>
     <div
-      class="w-[600px] bg-white rounded-xl shadow-lg overflow-hidden pointer-events-auto relative"
+      class="bg-white shadow-lg overflow-hidden pointer-events-auto relative"
+      style="width: 600px; border-radius: 12px;"
       @keydown="handleKeyDown"
     >
       <!-- Search Bar -->
-      <div class="flex items-center px-4 py-3 border-b border-gray-100">
+      <div class="flex items-center border-b border-gray-100" style="padding: 12px 16px">
         <div class="text-gray-400">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" viewBox="0 0 20 20" fill="currentColor">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style="width: 20px; height: 20px"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
             <path
               fill-rule="evenodd"
               d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"
@@ -130,7 +141,8 @@ onMounted(() => {
           type="text"
           v-model="searchQuery"
           placeholder="Search or Enter URL..."
-          class="w-full px-3 py-2 text-gray-600 placeholder-gray-400 focus:outline-none text-base"
+          class="w-full text-gray-600 placeholder-gray-400 focus:outline-none"
+          style="padding: 8px 12px; font-size: 16px"
           autocomplete="off"
           spellcheck="false"
           @focus="focusedIndex = -1"
@@ -138,7 +150,12 @@ onMounted(() => {
           @compositionend="isComposing = false"
         />
         <button class="text-gray-400 hover:text-gray-600">
-          <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" viewBox="0 0 20 20" fill="currentColor">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            style="width: 20px; height: 20px"
+            viewBox="0 0 20 20"
+            fill="currentColor"
+          >
             <path
               fill-rule="evenodd"
               d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
@@ -149,33 +166,40 @@ onMounted(() => {
       </div>
 
       <!-- Tab List -->
-      <div class="max-h-[400px] overflow-y-auto">
+      <div style="max-height: 400px" class="overflow-y-auto">
         <div
           v-for="(tab, index) in tabs"
           :key="index"
           :class="[
-            'flex items-center justify-between px-4 py-3 cursor-pointer text-base',
+            'flex items-center justify-between cursor-pointer',
             focusedIndex === index ? 'bg-indigo-100' : 'hover:bg-gray-50',
           ]"
+          style="padding: 12px 16px; font-size: 16px"
           tabindex="0"
           @focus="focusItem(index)"
           @click="selectTab(index)"
         >
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            <span class="text-base w-5 h-5 flex-shrink-0 flex items-center justify-center">
+          <div class="flex items-center min-w-0 flex-1" style="gap: 12px">
+            <span class="flex-shrink-0 flex items-center justify-center" style="width: 20px; height: 20px">
               <template v-if="tab.type === 'command'">
                 {{ tab.icon }}
               </template>
-              <img v-else-if="tab.favIconUrl" :src="tab.favIconUrl" class="w-4 h-4" alt="" />
+              <img v-else-if="tab.favIconUrl" :src="tab.favIconUrl" style="width: 16px; height: 16px" alt="" />
               <span v-else>📄</span>
             </span>
-            <span class="text-gray-700 truncate text-base">
+            <span class="text-gray-700 truncate" style="font-size: 16px">
               {{ tab.type === "command" ? tab.name : tab.type === "history" ? tab.title : tab.title || "Untitled Tab" }}
             </span>
           </div>
-          <button class="flex items-center gap-3 pl-4 text-gray-400 hover:text-gray-600 flex-shrink-0 text-base">
+          <button class="flex items-center text-gray-400 hover:text-gray-600 flex-shrink-0" 
+                 style="padding-left: 16px; gap: 12px; font-size: 16px">
             <span>{{ tab.actionText }}</span>
-            <svg xmlns="http://www.w3.org/2000/svg" style="width: 20px; height: 20px;" viewBox="0 0 20 20" fill="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style="width: 20px; height: 20px"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
               <path
                 fill-rule="evenodd"
                 d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
