@@ -84,7 +84,7 @@ const debounce = (fn: Function, delay: number) => {
 
 // Add search handler
 const handleSearch = async (term: string) => {
-  const response = await sendMessage("searchOptions", { term }, "background");
+  const response = await sendMessage("searchOptions", { term: term.trim() }, "background");
   if (response) {
     tabs.value = response.options;
     // Reset focus to first item if we have results, otherwise clear focus

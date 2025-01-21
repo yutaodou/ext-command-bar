@@ -8,13 +8,20 @@ export default defineBackground({
   main() {
     browser.commands.onCommand.addListener(async (command) => {
       if (command === "toggleCommandBar") {
-        const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+        const tabs = await browser.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
         if (tabs.length === 0) return;
 
         await ensureScriptsLoaded(tabs[0]!.id);
 
         const target = `content-script@${tabs[0]!.id}`;
-        await sendMessage("toggleCommandBar", { options: await getSwitchOptions() }, target);
+        await sendMessage(
+          "toggleCommandBar",
+          { options: await getSwitchOptions() },
+          target,
+        );
       }
     });
 
@@ -23,7 +30,7 @@ export default defineBackground({
     });
 
     onMessage("searchOptions", async ({ data }) => {
-      return { options: await getSwitchOptions(data.term?.toLowerCase()) };
+      return { options: await getSwitchOptions(data.term) };
     });
   },
 });

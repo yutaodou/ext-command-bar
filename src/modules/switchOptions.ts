@@ -1,4 +1,9 @@
-import { FilterableOption, SelectOptionMessage, SwitchOption, TabOption } from "@/types";
+import {
+  FilterableOption,
+  SelectOptionMessage,
+  SwitchOption,
+  TabOption,
+} from "@/types";
 import { orderBy } from "lodash";
 import { isSystemPage } from "./utils";
 import { v4 as uuid } from "uuid";
@@ -15,7 +20,10 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
   if (isTabOption(option)) {
     await browser.tabs.update(option.tabId!, { active: true });
   } else if (option.type === "history" || option.type === "bookmark") {
-    const [currentTab] = await browser.tabs.query({ active: true, currentWindow: true });
+    const [currentTab] = await browser.tabs.query({
+      active: true,
+      currentWindow: true,
+    });
     if (currentTab?.index !== undefined) {
       await browser.tabs.create({
         url: option.url,
@@ -23,7 +31,11 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
         index: currentTab.index + 1,
       });
     }
-  } else if (option.type === "command" && option.action === "search" && option.searchTerm) {
+  } else if (
+    option.type === "command" &&
+    option.action === "search" &&
+    option.searchTerm
+  ) {
     await browser.search.query({
       disposition: "NEW_TAB",
       text: option.searchTerm,
@@ -31,8 +43,13 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
   }
 };
 
-export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
-  const [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+export const getSwitchOptions = async (
+  searchTerm: string = "",
+): Promise<SwitchOption[]> => {
+  const [currentTab] = await chrome.tabs.query({
+    active: true,
+    currentWindow: true,
+  });
   const currentUrl = currentTab?.url || "";
 
   const tabOptions = await getTabOptions();
@@ -40,24 +57,13 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
   const historyOptions = await getHistoryOptions();
 
   const options = [...tabOptions, ...bookmarkOptions, ...historyOptions];
-  const results: FilterableOption[] = search(searchTerm, options, 100);
+  const results = search(searchTerm, options, 100) as SwitchOption[];
 
-  const seen = new Set<string>([currentUrl]);
-  const combinedResults = results
-    .filter((item) => {
-      if (seen.has(item.url) || seen.has(item.title)) {
-        return false;
-      }
-      seen.add(item.url);
-      return true;
-    })
-    .slice(0, MAX_RESULTS);
-
-  if (combinedResults.length === 0 && searchTerm.trim()) {
-    return [buildSearchCommandOptions(searchTerm)];
+  if (results.length < MAX_RESULTS && searchTerm.trim()) {
+    return [...results, buildSearchCommandOptions(searchTerm)];
+  } else {
+    return results.slice(0, MAX_RESULTS);
   }
-
-  return combinedResults as SwitchOption[];
 };
 
 const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
@@ -76,7 +82,11 @@ const getHistoryOptions = async () => {
     startTime: 0,
   });
 
-  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
+  const historyOptions = orderBy(
+    history,
+    ["lastVisitTime", "visitCount"],
+    ["desc", "desc"],
+  ).map((item) => ({
     id: uuid(),
     type: "history" as const,
     title: item.title || "Untitled",
