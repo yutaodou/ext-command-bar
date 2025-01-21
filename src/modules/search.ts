@@ -75,8 +75,6 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
   const docs = filterOptions.map(convertToDoc);
   miniSearch.addAll(docs);
   const searchResults = miniSearch.search(term);
-  debug(searchResults);
-
   const deduplicated = deduplicateByUrl(searchResults);
   const sorted = deduplicated.sort(sortByType).slice(0, maxResults);
 
