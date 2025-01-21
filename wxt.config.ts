@@ -12,7 +12,7 @@ export default defineConfig({
   manifest: {
     name: "Yes Commander",
     description: "Yes Commander",
-    version: "0.0.2",
+    version: "0.0.3",
     host_permissions: ["<all_urls>"],
     permissions: ["scripting", "tabs", "history", "bookmarks","search"],
     commands: {

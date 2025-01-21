@@ -46,12 +46,6 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 export const getSwitchOptions = async (
   searchTerm: string = "",
 ): Promise<SwitchOption[]> => {
-  const [currentTab] = await chrome.tabs.query({
-    active: true,
-    currentWindow: true,
-  });
-  const currentUrl = currentTab?.url || "";
-
   const tabOptions = await getTabOptions();
   const bookmarkOptions = await getBookmarkOptions();
   const historyOptions = await getHistoryOptions();

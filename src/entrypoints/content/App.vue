@@ -10,6 +10,8 @@ const searchInput = ref<HTMLInputElement | null>(null);
 const container = ref<HTMLDivElement | null>(null);
 const tabs = ref<SwitchOption[]>([]);
 const isComposing = ref(false);
+const searchRequestCounter = ref(0);
+const previousTabs = ref<SwitchOption[]>([]);
 
 const toggleCommandBarDisplay = (options?: SwitchOption[]) => {
   if (!container.value) return;
@@ -82,18 +84,32 @@ const debounce = (fn: Function, delay: number) => {
   };
 };
 
-// Add search handler
+// Update search handler to maintain current results until new ones arrive
 const handleSearch = async (term: string) => {
+  const currentRequestId = ++searchRequestCounter.value;
+
+  if (!term.trim()) {
+    tabs.value = previousTabs.value;
+    focusedIndex.value = previousTabs.value.length > 0 ? 0 : -1;
+    return;
+  }
+
   const response = await sendMessage("searchOptions", { term: term.trim() }, "background");
-  if (response) {
-    tabs.value = response.options;
-    // Reset focus to first item if we have results, otherwise clear focus
-    focusedIndex.value = response.options.length > 0 ? 0 : -1;
+
+  if (currentRequestId === searchRequestCounter.value && response) {
+    await nextTick(() => {
+      tabs.value = response.options;
+      focusedIndex.value = response.options.length > 0 ? 0 : -1;
+      // 缓存结果
+      if (response.options.length > 0) {
+        previousTabs.value = response.options;
+      }
+    });
   }
 };
 
-// Create debounced search
-const debouncedSearch = debounce(handleSearch, 100);
+// Optimize debounce delay
+const debouncedSearch = debounce(handleSearch, 150);
 
 // Watch for changes in searchQuery
 watch(searchQuery, (newValue) => {
@@ -116,7 +132,7 @@ onMounted(() => {
     <div class="absolute inset-0 bg-black/50 pointer-events-auto"></div>
     <div
       class="bg-white shadow-lg overflow-hidden pointer-events-auto relative"
-      style="width: 600px; border-radius: 12px;"
+      style="width: 600px; border-radius: 12px"
       @keydown="handleKeyDown"
     >
       <!-- Search Bar -->
@@ -171,7 +187,7 @@ onMounted(() => {
           v-for="(tab, index) in tabs"
           :key="index"
           :class="[
-            'flex items-center justify-between cursor-pointer',
+            'flex items-center justify-between cursor-pointer transition-colors duration-150',
             focusedIndex === index ? 'bg-indigo-100' : 'hover:bg-gray-50',
           ]"
           style="padding: 12px 16px; font-size: 16px"
@@ -191,8 +207,10 @@ onMounted(() => {
               {{ tab.type === "command" ? tab.name : tab.type === "history" ? tab.title : tab.title || "Untitled Tab" }}
             </span>
           </div>
-          <button class="flex items-center text-gray-400 hover:text-gray-600 flex-shrink-0" 
-                 style="padding-left: 16px; gap: 12px; font-size: 16px">
+          <button
+            class="flex items-center text-gray-400 hover:text-gray-600 flex-shrink-0"
+            style="padding-left: 16px; gap: 12px; font-size: 16px"
+          >
             <span>{{ tab.actionText }}</span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -230,5 +248,20 @@ onMounted(() => {
 /* Make icon text slightly larger */
 #command-bar-container .icon-container {
   font-size: 20px !important;
+}
+
+.transition-colors {
+  transition-property: background-color, border-color, color, fill, stroke;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 </style>
