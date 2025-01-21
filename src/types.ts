@@ -36,7 +36,11 @@ export type CommandOption = {
   actionText: string;
 };
 
-export type SwitchOption = TabOption | HistoryOption | CommandOption | BookmarkOption;
+export type SwitchOption =
+  | TabOption
+  | HistoryOption
+  | CommandOption
+  | BookmarkOption;
 
 export type ToggleCommandBarMessage = {
   options: SwitchOption[];

@@ -33,7 +33,7 @@ const processTerm = (term: string, fieldName?: string): string | string[] => {
   return [term, ...generateNGrams(term, 3, 10)];
 };
 
-const tokenize = (text: string, fieldName?: string): string[] => {
+export const tokenize = (text: string, fieldName?: string): string[] => {
   if (!text || typeof text !== "string") {
     return [];
   }

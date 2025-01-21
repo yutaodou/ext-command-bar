@@ -1,13 +1,8 @@
-import {
-  FilterableOption,
-  SelectOptionMessage,
-  SwitchOption,
-  TabOption,
-} from "@/types";
+import { SelectOptionMessage, SwitchOption, TabOption } from "@/types";
 import { orderBy } from "lodash";
 import { isSystemPage } from "./utils";
 import { v4 as uuid } from "uuid";
-import { search } from "./search";
+import { search, tokenize } from "./search";
 
 const MAX_RESULTS = 5;
 
@@ -31,11 +26,7 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
         index: currentTab.index + 1,
       });
     }
-  } else if (
-    option.type === "command" &&
-    option.action === "search" &&
-    option.searchTerm
-  ) {
+  } else if (option.type === "command" && option.action === "search" && option.searchTerm) {
     await browser.search.query({
       disposition: "NEW_TAB",
       text: option.searchTerm,
@@ -43,12 +34,10 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
   }
 };
 
-export const getSwitchOptions = async (
-  searchTerm: string = "",
-): Promise<SwitchOption[]> => {
+export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
   const tabOptions = await getTabOptions();
-  const bookmarkOptions = await getBookmarkOptions();
-  const historyOptions = await getHistoryOptions();
+  const bookmarkOptions = searchTerm ? await getBookmarkOptions() : [];
+  const historyOptions = searchTerm ? await getHistoryOptions(searchTerm) : [];
 
   const options = [...tabOptions, ...bookmarkOptions, ...historyOptions];
   const results = search(searchTerm, options, 100) as SwitchOption[];
@@ -69,18 +58,15 @@ const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
   searchTerm,
 });
 
-const getHistoryOptions = async () => {
-  const history = await chrome.history.search({
-    text: "",
-    maxResults: 200,
-    startTime: 0,
-  });
+const getHistoryOptions = async (term: string) => {
+  const tokens = tokenize(term);
+  const oneWeekAgo = new Date().getTime() - 14 * 86400 * 1000;
+  const results = await Promise.all(
+    tokens.map((token) => chrome.history.search({ text: token, maxResults: 100, startTime: oneWeekAgo }))
+  );
 
-  const historyOptions = orderBy(
-    history,
-    ["lastVisitTime", "visitCount"],
-    ["desc", "desc"],
-  ).map((item) => ({
+  const history = results.flatMap((item) => item);
+  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
     id: uuid(),
     type: "history" as const,
     title: item.title || "Untitled",
