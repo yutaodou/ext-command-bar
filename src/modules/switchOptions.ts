@@ -1,4 +1,4 @@
-import { SelectOptionMessage, SwitchOption, TabOption } from "@/types";
+import { FilterableOption, HistoryOption, SelectOptionMessage, SwitchOption, TabOption } from "@/types";
 import { orderBy } from "lodash";
 import { isSystemPage } from "./utils";
 import { v4 as uuid } from "uuid";
@@ -35,11 +35,13 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 };
 
 export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
-  const tabOptions = await getTabOptions();
-  const bookmarkOptions = searchTerm ? await getBookmarkOptions() : [];
-  const historyOptions = searchTerm ? await getHistoryOptions(searchTerm) : [];
+  const [tabOptions, bookmarkOptions, historyOptions] = await Promise.all([
+    getTabOptions(),
+    getBookmarkOptions(searchTerm),
+    getHistoryOptions(searchTerm)
+  ]);
 
-  const options = [...tabOptions, ...bookmarkOptions, ...historyOptions];
+  const options = [...tabOptions, ...bookmarkOptions, ...historyOptions] as FilterableOption[];
   const results = search(searchTerm, options, 100) as SwitchOption[];
 
   if (results.length < MAX_RESULTS && searchTerm.trim()) {
@@ -58,9 +60,12 @@ const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
   searchTerm,
 });
 
-const getHistoryOptions = async (term: string) => {
-  const tokens = tokenize(term);
-  const oneWeekAgo = new Date().getTime() - 14 * 86400 * 1000;
+const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
+  const tokens = tokenize(searchTerm);
+  if (!tokens) {
+    return [];
+  }
+  const oneWeekAgo = new Date().getTime() - 28 * 86400 * 1000;
   const results = await Promise.all(
     tokens.map((token) => chrome.history.search({ text: token, maxResults: 100, startTime: oneWeekAgo }))
   );
@@ -77,7 +82,11 @@ const getHistoryOptions = async (term: string) => {
   return historyOptions;
 };
 
-const getBookmarkOptions = async () => {
+const getBookmarkOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
+  if (!searchTerm) {
+    return [];
+  }
+
   const bookmarks = await chrome.bookmarks.search({});
   const bookmarkOptions = bookmarks
     .filter((bookmark) => bookmark.url)
