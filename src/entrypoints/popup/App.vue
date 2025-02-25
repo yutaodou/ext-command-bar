@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { nextTick, onMounted, ref, watch } from "vue";
-import { sendMessage } from "webext-bridge/popup";
+import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
+import { sendMessage, onMessage } from "webext-bridge/popup";
 import { SwitchOption } from "~/types";
 import "~/assets/tailwind.css";
 
@@ -12,10 +12,13 @@ const isComposing = ref(false);
 const searchRequestCounter = ref(0);
 const previousTabs = ref<SwitchOption[]>([]);
 
+// Create a port connection to track popup state
+const port = ref<any>(null);
+
 // Initial load of switch options
 const loadInitialOptions = async () => {
-  const response = await sendMessage("getInitialOptions", {}, "background");
-  if (response) {
+  const response: any = await sendMessage("getInitialOptions", {}, "background");
+  if (response && Array.isArray(response.options)) {
     tabs.value = response.options;
     previousTabs.value = response.options;
     focusedIndex.value = response.options.length > 0 ? 0 : -1;
@@ -85,9 +88,9 @@ const handleSearch = async (term: string) => {
     focusedIndex.value = previousTabs.value.length > 0 ? 0 : -1;
     return;
   }
-  
-  const response = await sendMessage("searchOptions", { term: term.trim() }, "background");
-  if (currentRequestId === searchRequestCounter.value && response) {
+
+  const response: any = await sendMessage("searchOptions", { term: term.trim() }, "background");
+  if (currentRequestId === searchRequestCounter.value && response && Array.isArray(response.options)) {
     await nextTick(() => {
       tabs.value = response.options;
       focusedIndex.value = response.options.length > 0 ? 0 : -1;
@@ -111,6 +114,30 @@ onMounted(() => {
   // Focus search input and load initial options when component mounts
   searchInput.value?.focus();
   loadInitialOptions();
+
+  // Connect to background script to track popup state
+  try {
+    // @ts-ignore - browser is available in extension context
+    port.value = chrome.runtime.connect({ name: "popup-connection" });
+  } catch (error) {
+    console.error("Failed to connect port:", error);
+  }
+
+  // Listen for closePopup message from background
+  onMessage("closePopup", () => {
+    window.close();
+  });
+});
+
+onUnmounted(() => {
+  // Disconnect port when component is unmounted
+  if (port.value) {
+    try {
+      port.value.disconnect();
+    } catch (error) {
+      console.error("Failed to disconnect port:", error);
+    }
+  }
 });
 </script>
 

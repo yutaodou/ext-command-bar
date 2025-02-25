@@ -83,10 +83,7 @@ const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> =>
 };
 
 const getBookmarkOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
-  if (!searchTerm) {
-    return [];
-  }
-
+  // Remove the searchTerm check so bookmarks are always loaded
   const bookmarks = await chrome.bookmarks.search({});
   const bookmarkOptions = bookmarks
     .filter((bookmark) => bookmark.url)
