@@ -69,13 +69,13 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
         hash: 1,
       },
       combineWith: "AND",
-      fuzzy: 0.1,
+      fuzzy: 0.1
     },
   });
   const docs = filterOptions.map(convertToDoc);
   miniSearch.addAll(docs);
   const searchResults = miniSearch.search(term);
-  const deduplicated = deduplicateByUrl(searchResults);
+  const deduplicated = deduplicate(searchResults, keyExtractor);
   const sorted = deduplicated.sort(sortByType).slice(0, maxResults);
 
   const optionsMap = new Map(filterOptions.map((opt) => [opt.id, opt]));
@@ -97,18 +97,24 @@ const convertToDoc = (option: FilterableOption) => {
 const debug = (result: SearchResult[]) => {
   console.log(`Result count:${result.length} for term: ${result[0]?.queryTerms}`);
   result.forEach((item) => {
-    console.log(`  ${item.score} ${item.type} ${item.title} ${item.url}: ${item.terms}`);
+    console.log(`  ${item.score} ${item.type} ${JSON.stringify(item)}`);
   });
 };
 
-const deduplicateByUrl = (result: SearchResult[]): SearchResult[] => {
-  const seenUrl = new Set();
+const keyExtractor = (item: SearchResult) => {
+  const host = new URL(item.url).host;
+  return `${host}-${item.title}`;
+}
+
+const deduplicate = (result: SearchResult[], extractor: (item: SearchResult) => string): SearchResult[] => {
+  const seen = new Set();
   const uniq: SearchResult[] = [];
   result.forEach((item) => {
-    if (seenUrl.has(item.url)) {
+    const key = extractor(item);
+    if (seen.has(key)) {
       return;
     }
-    seenUrl.add(item.url);
+    seen.add(key);
     uniq.push(item);
   });
 

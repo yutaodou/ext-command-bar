@@ -2,6 +2,7 @@
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { sendMessage, onMessage } from "webext-bridge/popup";
 import { SwitchOption } from "~/types";
+import capitalize from  "lodash/capitalize";
 import "~/assets/tailwind.css";
 
 const searchQuery = ref("");
@@ -245,7 +246,7 @@ onUnmounted(() => {
         <!-- Type badge (with light grey color) -->
         <div class="flex-shrink-0 self-center ml-2">
           <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 text-gray-600">
-            {{ tab.type }}
+            {{ capitalize(tab.type) }}
           </span>
         </div>
       </div>
