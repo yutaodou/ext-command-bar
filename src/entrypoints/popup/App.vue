@@ -204,7 +204,7 @@ onUnmounted(() => {
         @focus="focusItem(index)"
         @click="selectTab(index)"
       >
-        <!-- Left side - Icon (now vertically centered) -->
+        <!-- Left side - Icon -->
         <div class="flex-shrink-0 flex items-center justify-center mr-3" style="height: 40px; width: 40px">
           <div 
             v-if="tab.type === 'command'" 
@@ -229,7 +229,7 @@ onUnmounted(() => {
           </div>
         </div>
         
-        <!-- Right side - Text content (now properly left-aligned) -->
+        <!-- Right side - Text content -->
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <!-- Title -->
           <div class="text-gray-800 truncate font-medium text-left">
@@ -242,22 +242,11 @@ onUnmounted(() => {
           </div>
         </div>
         
-        <!-- Action button (vertically centered) -->
-        <div class="flex-shrink-0 self-center ml-2 flex items-center">
-          <div class="text-gray-400">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              style="width: 16px; height: 16px"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </div>
+        <!-- Type badge (with light grey color) -->
+        <div class="flex-shrink-0 self-center ml-2">
+          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 text-gray-600">
+            {{ tab.type }}
+          </span>
         </div>
       </div>
       
@@ -324,6 +313,10 @@ button {
   border-radius: 0.5rem;
 }
 
+.rounded-md {
+  border-radius: 0.375rem;
+}
+
 .rounded {
   border-radius: 0.25rem;
 }
@@ -343,5 +336,81 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Type badge styles */
+.rounded-full {
+  border-radius: 9999px;
+}
+
+.px-2 {
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.py-0.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
+}
+
+.gap-2 {
+  gap: 0.5rem;
+}
+
+/* Ensure font size for labels */
+.text-xs {
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
+}
+
+/* Header styling */
+.text-lg {
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+.font-bold {
+  font-weight: 700;
+}
+
+.py-3 {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+}
+
+.bg-gray-50 {
+  background-color: #f9fafb;
+}
+
+.rounded-t-xl {
+  border-top-left-radius: 0.75rem;
+  border-top-right-radius: 0.75rem;
+}
+
+/* Reset button styles */
+button.border-none {
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+/* Close button hover effect */
+button:hover.bg-gray-200 {
+  background-color: #e5e7eb;
+}
+
+.p-1 {
+  padding: 0.25rem;
+}
+
+.px-4 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Ensure the close button doesn't use the global button styles */
+button.flex {
+  border-radius: 9999px;
+  transition: background-color 0.15s;
 }
 </style>

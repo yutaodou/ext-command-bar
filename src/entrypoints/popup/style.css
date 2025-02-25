@@ -38,6 +38,7 @@ body {
   place-items: center;
   min-width: 320px;
   min-height: 100vh;
+  border-radius: 20px;
 }
 
 h1 {
@@ -71,8 +72,9 @@ button:focus-visible {
 #app {
   max-width: 1280px;
   margin: 0 auto;
-  padding: 2rem 1rem;
+  padding: 1.5rem;
   text-align: center;
+  border-radius: 20px;
 }
 
 @media (prefers-color-scheme: light) {
