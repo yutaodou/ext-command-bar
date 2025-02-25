@@ -142,9 +142,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-white" style="width: 600px; min-height: 400px; border-radius: 12px">
+  <div class="bg-white rounded-xl" style="width: 600px; min-height: 400px;">
     <!-- Search Bar -->
-    <div class="flex items-center border-b border-gray-100" style="padding: 12px 16px">
+    <div class="flex items-center border-b border-gray-100" style="padding: 8px 12px">
       <div class="text-gray-400">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -196,44 +196,74 @@ onUnmounted(() => {
         v-for="(tab, index) in tabs"
         :key="index"
         :class="[
-          'flex items-center justify-between cursor-pointer transition-colors duration-150',
+          'flex items-center cursor-pointer transition-colors duration-150 rounded-lg',
           focusedIndex === index ? 'bg-indigo-100' : 'hover:bg-gray-50',
         ]"
-        style="padding: 12px 16px; font-size: 16px"
+        style="padding: 8px 12px; margin: 4px 8px"
         tabindex="0"
         @focus="focusItem(index)"
         @click="selectTab(index)"
       >
-        <div class="flex items-center min-w-0 flex-1" style="gap: 12px">
-          <span class="flex-shrink-0 flex items-center justify-center" style="width: 20px; height: 20px">
-            <template v-if="tab.type === 'command'">
-              {{ tab.icon }}
-            </template>
-            <img v-else-if="tab.favIconUrl" :src="tab.favIconUrl" style="width: 16px; height: 16px" alt="" />
-            <span v-else>📄</span>
-          </span>
-          <span class="text-gray-700 truncate" style="font-size: 16px">
-            {{ tab.type === "command" ? tab.name : tab.type === "history" ? tab.title : tab.title || "Untitled Tab" }}
-          </span>
-        </div>
-        <button
-          class="flex items-center text-gray-400 hover:text-gray-600 flex-shrink-0"
-          style="padding-left: 16px; gap: 12px; font-size: 16px"
-        >
-          <span>{{ tab.actionText }}</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            style="width: 20px; height: 20px"
-            viewBox="0 0 20 20"
-            fill="currentColor"
+        <!-- Left side - Icon (now vertically centered) -->
+        <div class="flex-shrink-0 flex items-center justify-center mr-3" style="height: 40px; width: 40px">
+          <div 
+            v-if="tab.type === 'command'" 
+            class="text-2xl flex items-center justify-center"
+            style="width: 32px; height: 32px"
           >
-            <path
-              fill-rule="evenodd"
-              d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-              clip-rule="evenodd"
-            />
-          </svg>
-        </button>
+            {{ tab.icon }}
+          </div>
+          <img 
+            v-else-if="tab.favIconUrl" 
+            :src="tab.favIconUrl" 
+            style="width: 32px; height: 32px; object-fit: contain" 
+            alt="" 
+            class="rounded"
+          />
+          <div 
+            v-else 
+            class="text-2xl flex items-center justify-center"
+            style="width: 32px; height: 32px"
+          >
+            📄
+          </div>
+        </div>
+        
+        <!-- Right side - Text content (now properly left-aligned) -->
+        <div class="flex-1 min-w-0 flex flex-col justify-center">
+          <!-- Title -->
+          <div class="text-gray-800 truncate font-medium text-left">
+            {{ tab.type === "command" ? tab.name : tab.title || "Untitled Tab" }}
+          </div>
+          
+          <!-- URL/Subtitle -->
+          <div class="text-gray-500 truncate text-xs text-left">
+            {{ tab.type === 'command' ? tab.actionText : tab.url || tab.actionText || "" }}
+          </div>
+        </div>
+        
+        <!-- Action button (vertically centered) -->
+        <div class="flex-shrink-0 self-center ml-2 flex items-center">
+          <div class="text-gray-400">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              style="width: 16px; height: 16px"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Empty state -->
+      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-500" style="height: 100px">
+        No results found
       </div>
     </div>
   </div>
@@ -268,5 +298,50 @@ div {
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Base typography */
+input,
+button {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* Override font sizes for specific elements */
+.text-xs {
+  font-size: 13px !important;
+}
+
+.text-2xl {
+  font-size: 24px !important;
+}
+
+.rounded-xl {
+  border-radius: 0.75rem;
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}
+
+.rounded {
+  border-radius: 0.25rem;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.text-left {
+  text-align: left;
+}
+
+/* Ensure consistent icon container size */
+.icon-container {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
