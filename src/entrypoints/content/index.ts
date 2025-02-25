@@ -1,6 +1,4 @@
 import { ContentScriptContext } from "wxt/client";
-import App from "./App.vue";
-import { createApp } from "vue";
 import "./reset.css";
 
 export default defineContentScript({
@@ -10,36 +8,9 @@ export default defineContentScript({
   matchOriginAsFallback: true,
   runAt: "document_start",
   world: "ISOLATED",
-
   async main(ctx) {
-    const ui = await defineOverlay(ctx);
-
-    ui.mount();
-
-    ctx.addEventListener(window, "wxt:locationchange", (event) => {
-      ui.mount();
-    });
+    // Content script is kept minimal as the UI is now in the popup
+    // You can add any content script functionality here if needed
+    console.log("Command bar content script loaded");
   },
 });
-
-function defineOverlay(ctx: ContentScriptContext) {
-  return createShadowRootUi(ctx, {
-    name: "ext-command-bar",
-    position: "modal",
-    anchor: "body",
-    append: "after",
-    mode: "closed",
-    zIndex: 99999,
-    isolateEvents: true,
-    css: "html {font-size: 16px;}",
-    onMount(container, _shadow, shadowHost) {
-      const app = createApp(App);
-      app.mount(container);
-      shadowHost.style.pointerEvents = "none";
-      return app;
-    },
-    onRemove(app) {
-      app?.unmount();
-    },
-  });
-}
