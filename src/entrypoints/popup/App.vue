@@ -149,10 +149,9 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-[#292a2d] rounded-xl" style="width: 600px; min-height: 400px;">
-    <!-- Search Bar -->
-    <div class="flex items-center border-b border-gray-100 dark:border-[#3b3c3f]" style="padding: 8px 8px">
-      <div class="text-gray-400 dark:text-[#9aa0a6]">
+  <div class="bg-white dark:bg-[#292a2d] rounded-xl dark:shadow-md" style="width: 600px; min-height: 400px;">
+    <div class="flex items-center" style="padding: 8px 12px">
+      <div class="text-gray-500 dark:text-[#9aa0a6]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           style="width: 20px; height: 20px"
@@ -171,8 +170,8 @@ onUnmounted(() => {
         ref="searchInput"
         type="text"
         v-model="searchQuery"
-        placeholder="Search tabs, bookmarks or history..."
-        class="w-full text-gray-600 dark:text-[#e8eaed] placeholder-gray-400 dark:placeholder-[#9aa0a6] focus:outline-none bg-white dark:bg-[#292a2d]"
+        placeholder="Search or Enter URL..."
+        class="w-full text-gray-800 dark:text-[#e8eaed] placeholder-gray-500 dark:placeholder-[#9aa0a6] focus:outline-none bg-white dark:bg-[#292a2d]"
         style="padding: 8px 12px; font-size: 16px"
         autocomplete="off"
         spellcheck="false"
@@ -181,10 +180,10 @@ onUnmounted(() => {
         @compositionend="isComposing = false"
         @keydown="handleKeyDown"
       />
-      <!-- Replace settings icon with clear icon -->
+      <!-- Clear icon -->
       <button 
         v-if="searchQuery"
-        class="text-gray-400 dark:text-[#9aa0a6] hover:text-gray-600 dark:hover:text-[#e8eaed]"
+        class="text-gray-500 dark:text-[#9aa0a6] hover:text-gray-700 dark:hover:text-[#e8eaed]"
         @click="clearSearch"
         aria-label="Clear search"
       >
@@ -204,15 +203,15 @@ onUnmounted(() => {
     </div>
     
     <!-- Tab List -->
-    <div style="max-height: 400px" class="overflow-y-auto">
+    <div style="max-height: 400px" class="overflow-y-auto pt-2">
       <div
         v-for="(tab, index) in tabs"
         :key="index"
         :class="[
-          'flex items-center cursor-pointer transition-colors duration-150 rounded-lg',
+          'flex items-center cursor-pointer transition-colors duration-150 rounded-lg border',
           focusedIndex === index 
-            ? 'bg-indigo-100 dark:bg-[#3c4043]' 
-            : 'hover:bg-gray-50 dark:hover:bg-[#35363a]',
+            ? 'bg-indigo-50 border-indigo-200 dark:bg-[#3c4043] dark:border-[#4c5055]' 
+            : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:border-[#35363a] dark:hover:bg-[#35363a] dark:hover:border-[#45464a]',
         ]"
         style="padding: 8px 12px; margin: 4px 8px"
         tabindex="0"
@@ -250,26 +249,26 @@ onUnmounted(() => {
         <!-- Right side - Text content -->
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <!-- Title -->
-          <div class="text-gray-800 dark:text-[#e8eaed] truncate font-medium text-left">
+          <div class="text-gray-900 dark:text-[#e8eaed] truncate font-medium text-left">
             {{ tab.type === "command" ? tab.name : tab.title || "Untitled Tab" }}
           </div>
           
           <!-- URL/Subtitle -->
-          <div class="text-gray-500 dark:text-[#9aa0a6] truncate text-xs text-left">
+          <div class="text-gray-600 dark:text-[#9aa0a6] truncate text-xs text-left">
             {{ tab.type === 'command' ? tab.actionText : tab.url || tab.actionText || "" }}
           </div>
         </div>
         
         <!-- Type badge (with light grey color) -->
         <div class="flex-shrink-0 self-center ml-2">
-          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 dark:bg-[#3b3c3f] text-gray-600 dark:text-[#8ab4f8]">
+          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 border border-gray-200 dark:bg-[#3b3c3f] dark:border-[#4c5055] text-gray-700 dark:text-[#8ab4f8]">
             {{ capitalize(tab.type) }}
           </span>
         </div>
       </div>
       
       <!-- Empty state -->
-      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-500 dark:text-[#9aa0a6]" style="height: 100px">
+      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-600 dark:text-[#9aa0a6]" style="height: 100px">
         No results found
       </div>
     </div>
@@ -422,21 +421,35 @@ button.flex {
 .bg-white,
 .dark\:bg-\[#292a2d\],
 .text-gray-800,
+.text-gray-900,
 .dark\:text-\[#e8eaed\],
 .text-gray-600,
 .dark\:text-\[#e8eaed\],
 .bg-indigo-100,
+.bg-indigo-50,
 .dark\:bg-\[#3c4043\],
 .bg-gray-50,
 .dark\:hover\:bg-\[#35363a\],
 .bg-gray-100,
-.dark\:bg-\[#3b3c3f\] {
-  transition: background-color 0.3s ease, color 0.3s ease;
+.dark\:bg-\[#3b3c3f\],
+.border-gray-100,
+.border-gray-200,
+.dark\:border-\[#35363a\],
+.dark\:border-\[#3b3c3f\],
+.dark\:border-\[#4c5055\],
+.border-indigo-200,
+.dark\:border-\[#45464a\] {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
 }
 
 /* Edge browser dark mode placeholder styling */
 .dark .placeholder-\[#9aa0a6\]::placeholder {
   color: #9aa0a6;
   opacity: 1;
+}
+
+/* Add subtle shadow to the popup only in dark mode */
+.dark .shadow-md {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 </style>
