@@ -143,10 +143,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-white rounded-xl" style="width: 600px; min-height: 400px;">
+  <div class="bg-white dark:bg-[#292a2d] rounded-xl" style="width: 600px; min-height: 400px;">
     <!-- Search Bar -->
-    <div class="flex items-center border-b border-gray-100" style="padding: 8px 12px">
-      <div class="text-gray-400">
+    <div class="flex items-center border-b border-gray-100 dark:border-[#3b3c3f]" style="padding: 8px 12px">
+      <div class="text-gray-400 dark:text-[#9aa0a6]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           style="width: 20px; height: 20px"
@@ -166,7 +166,7 @@ onUnmounted(() => {
         type="text"
         v-model="searchQuery"
         placeholder="Search or Enter URL..."
-        class="w-full text-gray-600 placeholder-gray-400 focus:outline-none bg-white"
+        class="w-full text-gray-600 dark:text-[#e8eaed] placeholder-gray-400 dark:placeholder-[#9aa0a6] focus:outline-none bg-white dark:bg-[#292a2d]"
         style="padding: 8px 12px; font-size: 16px"
         autocomplete="off"
         spellcheck="false"
@@ -175,7 +175,7 @@ onUnmounted(() => {
         @compositionend="isComposing = false"
         @keydown="handleKeyDown"
       />
-      <button class="text-gray-400 hover:text-gray-600">
+      <button class="text-gray-400 dark:text-[#9aa0a6] hover:text-gray-600 dark:hover:text-[#e8eaed]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           style="width: 20px; height: 20px"
@@ -198,7 +198,9 @@ onUnmounted(() => {
         :key="index"
         :class="[
           'flex items-center cursor-pointer transition-colors duration-150 rounded-lg',
-          focusedIndex === index ? 'bg-indigo-100' : 'hover:bg-gray-50',
+          focusedIndex === index 
+            ? 'bg-indigo-100 dark:bg-[#3c4043]' 
+            : 'hover:bg-gray-50 dark:hover:bg-[#35363a]',
         ]"
         style="padding: 8px 12px; margin: 4px 8px"
         tabindex="0"
@@ -223,36 +225,39 @@ onUnmounted(() => {
           />
           <div 
             v-else 
-            class="text-2xl flex items-center justify-center"
+            class="text-2xl flex items-center justify-center bg-gray-100 dark:bg-[#3b3c3f] rounded-md"
             style="width: 32px; height: 32px"
           >
-            📄
+            <span v-if="tab.type === 'tab'">📄</span>
+            <span v-else-if="tab.type === 'history'">🕒</span>
+            <span v-else-if="tab.type === 'bookmark'">🔖</span>
+            <span v-else>📄</span>
           </div>
         </div>
         
         <!-- Right side - Text content -->
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <!-- Title -->
-          <div class="text-gray-800 truncate font-medium text-left">
+          <div class="text-gray-800 dark:text-[#e8eaed] truncate font-medium text-left">
             {{ tab.type === "command" ? tab.name : tab.title || "Untitled Tab" }}
           </div>
           
           <!-- URL/Subtitle -->
-          <div class="text-gray-500 truncate text-xs text-left">
+          <div class="text-gray-500 dark:text-[#9aa0a6] truncate text-xs text-left">
             {{ tab.type === 'command' ? tab.actionText : tab.url || tab.actionText || "" }}
           </div>
         </div>
         
         <!-- Type badge (with light grey color) -->
         <div class="flex-shrink-0 self-center ml-2">
-          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 text-gray-600">
+          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 dark:bg-[#3b3c3f] text-gray-600 dark:text-[#8ab4f8]">
             {{ capitalize(tab.type) }}
           </span>
         </div>
       </div>
       
       <!-- Empty state -->
-      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-500" style="height: 100px">
+      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-500 dark:text-[#9aa0a6]" style="height: 100px">
         No results found
       </div>
     </div>
@@ -379,25 +384,11 @@ button {
   padding-bottom: 0.75rem;
 }
 
-.bg-gray-50 {
-  background-color: #f9fafb;
-}
-
-.rounded-t-xl {
-  border-top-left-radius: 0.75rem;
-  border-top-right-radius: 0.75rem;
-}
-
 /* Reset button styles */
 button.border-none {
   border: none;
   padding: 0;
   background: transparent;
-}
-
-/* Close button hover effect */
-button:hover.bg-gray-200 {
-  background-color: #e5e7eb;
 }
 
 .p-1 {
@@ -413,5 +404,27 @@ button:hover.bg-gray-200 {
 button.flex {
   border-radius: 9999px;
   transition: background-color 0.15s;
+}
+
+/* Smooth transition when switching between light and dark mode */
+.bg-white,
+.dark\:bg-\[#292a2d\],
+.text-gray-800,
+.dark\:text-\[#e8eaed\],
+.text-gray-600,
+.dark\:text-\[#e8eaed\],
+.bg-indigo-100,
+.dark\:bg-\[#3c4043\],
+.bg-gray-50,
+.dark\:hover\:bg-\[#35363a\],
+.bg-gray-100,
+.dark\:bg-\[#3b3c3f\] {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Edge browser dark mode placeholder styling */
+.dark .placeholder-\[#9aa0a6\]::placeholder {
+  color: #9aa0a6;
+  opacity: 1;
 }
 </style>
