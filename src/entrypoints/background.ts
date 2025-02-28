@@ -1,5 +1,4 @@
 import { getSwitchOptions, handleSelectOption } from "@/modules/switchOptions";
-import { ensureScriptsLoaded } from "@/modules/utils";
 import { onMessage, sendMessage } from "webext-bridge/background";
 
 // Variable to track popup state

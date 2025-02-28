@@ -151,7 +151,7 @@ onUnmounted(() => {
 <template>
   <div class="bg-white dark:bg-[#292a2d] rounded-xl" style="width: 600px; min-height: 400px;">
     <!-- Search Bar -->
-    <div class="flex items-center border-b border-gray-100 dark:border-[#3b3c3f]" style="padding: 8px 12px">
+    <div class="flex items-center border-b border-gray-100 dark:border-[#3b3c3f]" style="padding: 8px 8px">
       <div class="text-gray-400 dark:text-[#9aa0a6]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
