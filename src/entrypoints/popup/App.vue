@@ -209,8 +209,8 @@ onUnmounted(() => {
         :class="[
           'flex items-center cursor-pointer transition-colors duration-150 rounded-lg',
           focusedIndex === index
-            ? 'bg-blue-50 dark:bg-[#3c4043] dark:border-[#4c5055]'
-            : 'hover:bg-gray-50 dark:border-[#35363a] dark:hover:bg-[#35363a] dark:hover:border-[#45464a]',
+            ? 'bg-blue-50 border border-blue-300 dark:bg-[#3c4043] dark:border-[#4c5055]'
+            : 'hover:bg-gray-50 hover:border hover:border-gray-300 border border-transparent dark:border-transparent dark:hover:bg-[#35363a] dark:hover:border-[#45464a]',
         ]"
         style="padding: 8px 12px; margin: 4px 8px"
         tabindex="0"
