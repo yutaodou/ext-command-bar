@@ -3,6 +3,7 @@ import { orderBy } from "lodash";
 import { isSystemPage } from "./utils";
 import { v4 as uuid } from "uuid";
 import { search, tokenize } from "./search";
+import { getFaviconBase64 } from "./faviconManager";
 
 const MAX_RESULTS = 5;
 
@@ -35,21 +36,74 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 };
 
 export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
+  // Get options without favicons first
   const [tabOptions, bookmarkOptions, historyOptions] = await Promise.all([
-    getTabOptions(),
-    getBookmarkOptions(searchTerm),
-    getHistoryOptions(searchTerm)
+    getTabOptionsWithoutFavicons(),
+    getBookmarkOptionsWithoutFavicons(searchTerm),
+    getHistoryOptionsWithoutFavicons(searchTerm)
   ]);
 
   const options = [...tabOptions, ...bookmarkOptions, ...historyOptions] as FilterableOption[];
   const results = search(searchTerm, options, 100) as SwitchOption[];
-
+  
+  let finalResults;
   if (results.length < MAX_RESULTS && searchTerm.trim()) {
-    return [...results, buildSearchCommandOptions(searchTerm)];
+    finalResults = [...results, buildSearchCommandOptions(searchTerm)];
   } else {
-    return results.slice(0, MAX_RESULTS);
+    finalResults = results.slice(0, MAX_RESULTS);
   }
+
+  // Only now populate favicons for the final results that will be displayed
+  await populateFaviconsForResults(finalResults);
+  return finalResults;
 };
+
+/**
+ * Populate favicons only for the final results that will be shown to the user
+ */
+async function populateFaviconsForResults(results: SwitchOption[]): Promise<void> {
+  const promises = results.map(async (option) => {
+    try {
+      // Skip command options as they use emoji icons
+      if (option.type === 'command') {
+        return;
+      }
+
+      if (!option.url) {
+        return;
+      }
+
+      // Get favicon base64 data
+      const favicon = await getFaviconBase64(option.url);
+      
+      // For tab options, try to use the tab's native favicon as fallback
+      if (!favicon && isTabOption(option) && option.tabId) {
+        // Get the tab to access its native favicon
+        try {
+          const tab = await browser.tabs.get(option.tabId);
+          if (tab && tab.favIconUrl) {
+            const tabFavicon = await getFaviconBase64(tab.favIconUrl);
+            if (tabFavicon) {
+              option.faviconData = tabFavicon;
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('Error getting tab favicon:', error);
+        }
+      }
+
+      // Update the option with the favicon data
+      if (favicon) {
+        option.faviconData = favicon;
+      }
+    } catch (error) {
+      console.error('Error loading favicon:', error);
+    }
+  });
+
+  await Promise.all(promises);
+}
 
 const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
   type: "command",
@@ -60,7 +114,7 @@ const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
   searchTerm,
 });
 
-const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
+const getHistoryOptionsWithoutFavicons = async (searchTerm: string): Promise<SwitchOption[]> => {
   const tokens = tokenize(searchTerm);
   if (!tokens) {
     return [];
@@ -71,37 +125,41 @@ const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> =>
   );
 
   const history = results.flatMap((item) => item);
-  const historyOptions = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]).map((item) => ({
+  const sortedHistory = orderBy(history, ["lastVisitTime", "visitCount"], ["desc", "desc"]);
+
+  // Create options with URLs but without favicons
+  return sortedHistory.map((item) => ({
     id: uuid(),
     type: "history" as const,
     title: item.title || "Untitled",
     url: item.url || "",
-    favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(item.url || "").hostname}`,
+    faviconData: "", // Will be populated later only if this option is selected for display
     actionText: "Open Page",
   }));
-  return historyOptions;
 };
 
-const getBookmarkOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
+const getBookmarkOptionsWithoutFavicons = async (searchTerm: string): Promise<SwitchOption[]> => {
   // Remove the searchTerm check so bookmarks are always loaded
   const bookmarks = await chrome.bookmarks.search({});
-  const bookmarkOptions = bookmarks
+
+  // Create options with URLs but without favicons
+  return bookmarks
     .filter((bookmark) => bookmark.url)
     .map((bookmark) => ({
       id: uuid(),
       type: "bookmark" as const,
       title: bookmark.title || "Untitled",
       url: bookmark.url || "",
-      favIconUrl: `https://www.google.com/s2/favicons?domain=${new URL(bookmark.url || "").hostname}`,
+      faviconData: "", // Will be populated later only if this option is selected for display
       actionText: "Open Bookmark",
     }));
-  return bookmarkOptions;
 };
 
-const getTabOptions = async () => {
+const getTabOptionsWithoutFavicons = async () => {
   const tabs = await chrome.tabs.query({ currentWindow: true, active: false });
 
-  const tabOptions = orderBy(tabs, ["lastAccessed"], ["desc"])
+  // Create options with tabs but without favicons
+  return orderBy(tabs, ["lastAccessed"], ["desc"])
     .filter((tab) => {
       return tab.id && !isSystemPage(tab);
     })
@@ -111,8 +169,7 @@ const getTabOptions = async () => {
       type: "tab" as const,
       title: tab.title || "Untitled",
       url: tab.url || "",
-      favIconUrl: tab.favIconUrl,
+      faviconData: "", // Will be populated later only if this option is selected for display
       actionText: "Switch to Tab",
     }));
-  return tabOptions;
 };

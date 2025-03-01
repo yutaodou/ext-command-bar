@@ -14,7 +14,7 @@ export default defineConfig({
     description: "Easily search tab/history/bookmark, and switch between tabs.",
     version: "0.0.5",
     host_permissions: ["<all_urls>"],
-    permissions: ["scripting", "tabs", "history", "bookmarks","search"],
+    permissions: ["scripting", "tabs", "history", "bookmarks", "search", "storage"],
     commands: {
       toggleCommandBar: {
         description: "Toggle the command bar",

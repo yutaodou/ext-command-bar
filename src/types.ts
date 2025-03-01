@@ -9,21 +9,21 @@ export type TabOption = FilterableOption & {
   id: string;
   type: "tab";
   tabId?: number;
-  favIconUrl?: string;
+  faviconData?: string;
   actionText: string;
 };
 
 export type HistoryOption = FilterableOption & {
   id: string;
   type: "history";
-  favIconUrl?: string;
+  faviconData?: string;
   actionText: string;
 };
 
 export type BookmarkOption = FilterableOption & {
   type: "bookmark";
   id: string;
-  favIconUrl?: string;
+  faviconData?: string;
   actionText: string;
 };
 

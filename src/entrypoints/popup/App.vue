@@ -227,17 +227,20 @@ onUnmounted(() => {
           >
             {{ tab.icon }}
           </div>
+          <!-- Update the image to use faviconData instead of favIconUrl -->
           <img 
-            v-else-if="tab.favIconUrl" 
-            :src="tab.favIconUrl" 
+            v-else-if="tab.faviconData" 
+            :src="tab.faviconData"
             style="width: 32px; height: 32px; object-fit: contain" 
-            alt="" 
+            alt=""
             class="rounded"
+            loading="lazy"
+            onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
           />
           <div 
-            v-else 
+            v-else
             class="text-2xl flex items-center justify-center bg-gray-100 dark:bg-[#3b3c3f] rounded-md"
-            style="width: 32px; height: 32px"
+            style="width: 32px; height: 32px; display: none;"
           >
             <span v-if="tab.type === 'tab'">📄</span>
             <span v-else-if="tab.type === 'history'">🕒</span>
