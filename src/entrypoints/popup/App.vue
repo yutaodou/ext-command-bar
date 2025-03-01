@@ -2,7 +2,7 @@
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { sendMessage, onMessage } from "webext-bridge/popup";
 import { SwitchOption } from "~/types";
-import capitalize from "lodash/capitalize";
+import capitalize from  "lodash/capitalize";
 import "~/assets/tailwind.css";
 
 const searchQuery = ref("");
@@ -149,8 +149,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-[#292a2d] rounded-xl dark:shadow-md" style="width: 600px; min-height: 400px">
-    <div class="flex items-center bg-gray-100 dark:bg-[#292a2d] rounded-full mx-3 my-2" style="padding: 8px 12px">
+  <div class="bg-white dark:bg-[#292a2d] rounded-xl dark:shadow-md" style="width: 600px; min-height: 400px;">
+    <div class="flex items-center" style="padding: 8px 12px">
       <div class="text-gray-500 dark:text-[#9aa0a6]">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -171,7 +171,7 @@ onUnmounted(() => {
         type="text"
         v-model="searchQuery"
         placeholder="Search or Enter URL..."
-        class="w-full text-gray-800 dark:text-[#e8eaed] placeholder-gray-500 dark:placeholder-[#9aa0a6] focus:outline-none bg-gray-100 dark:bg-[#292a2d]"
+        class="w-full text-gray-800 dark:text-[#e8eaed] placeholder-gray-500 dark:placeholder-[#9aa0a6] focus:outline-none bg-white dark:bg-[#292a2d]"
         style="padding: 8px 12px; font-size: 16px"
         autocomplete="off"
         spellcheck="false"
@@ -181,7 +181,7 @@ onUnmounted(() => {
         @keydown="handleKeyDown"
       />
       <!-- Clear icon -->
-      <button
+      <button 
         v-if="searchQuery"
         class="text-gray-500 dark:text-[#9aa0a6] hover:text-gray-700 dark:hover:text-[#e8eaed]"
         @click="clearSearch"
@@ -201,16 +201,17 @@ onUnmounted(() => {
         </svg>
       </button>
     </div>
+    
     <!-- Tab List -->
-    <div style="max-height: 400px" class="overflow-y-auto">
+    <div style="max-height: 400px" class="overflow-y-auto pt-2">
       <div
         v-for="(tab, index) in tabs"
         :key="index"
         :class="[
-          'flex items-center cursor-pointer transition-colors duration-150 rounded-lg',
-          focusedIndex === index
-            ? 'bg-blue-50 border border-blue-300 dark:bg-[#3c4043] dark:border-[#4c5055]'
-            : 'hover:bg-gray-50 hover:border hover:border-gray-300 border border-transparent dark:border-transparent dark:hover:bg-[#35363a] dark:hover:border-[#45464a]',
+          'flex items-center cursor-pointer transition-colors duration-150 rounded-lg border',
+          focusedIndex === index 
+            ? 'bg-indigo-50 border-indigo-200 dark:bg-[#3c4043] dark:border-[#4c5055]' 
+            : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:border-[#35363a] dark:hover:bg-[#35363a] dark:hover:border-[#45464a]',
         ]"
         style="padding: 8px 12px; margin: 4px 8px"
         tabindex="0"
@@ -219,22 +220,22 @@ onUnmounted(() => {
       >
         <!-- Left side - Icon -->
         <div class="flex-shrink-0 flex items-center justify-center mr-3" style="height: 40px; width: 40px">
-          <div
-            v-if="tab.type === 'command'"
+          <div 
+            v-if="tab.type === 'command'" 
             class="text-2xl flex items-center justify-center"
             style="width: 32px; height: 32px"
           >
             {{ tab.icon }}
           </div>
-          <img
-            v-else-if="tab.favIconUrl"
-            :src="tab.favIconUrl"
-            style="width: 32px; height: 32px; object-fit: contain"
-            alt=""
+          <img 
+            v-else-if="tab.favIconUrl" 
+            :src="tab.favIconUrl" 
+            style="width: 32px; height: 32px; object-fit: contain" 
+            alt="" 
             class="rounded"
           />
-          <div
-            v-else
+          <div 
+            v-else 
             class="text-2xl flex items-center justify-center bg-gray-100 dark:bg-[#3b3c3f] rounded-md"
             style="width: 32px; height: 32px"
           >
@@ -244,36 +245,30 @@ onUnmounted(() => {
             <span v-else>📄</span>
           </div>
         </div>
-
+        
         <!-- Right side - Text content -->
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <!-- Title -->
           <div class="text-gray-900 dark:text-[#e8eaed] truncate font-medium text-left">
             {{ tab.type === "command" ? tab.name : tab.title || "Untitled Tab" }}
           </div>
-
+          
           <!-- URL/Subtitle -->
           <div class="text-gray-600 dark:text-[#9aa0a6] truncate text-xs text-left">
-            {{ tab.type === "command" ? tab.actionText : tab.url || tab.actionText || "" }}
+            {{ tab.type === 'command' ? tab.actionText : tab.url || tab.actionText || "" }}
           </div>
         </div>
-
+        
         <!-- Type badge (with light grey color) -->
         <div class="flex-shrink-0 self-center ml-2">
-          <span
-            class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 text-gray-700 dark:bg-[#3b3c3f] dark:border-[#4c5055] dark:text-[#8ab4f8]"
-          >
+          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 border border-gray-200 dark:bg-[#3b3c3f] dark:border-[#4c5055] text-gray-700 dark:text-[#8ab4f8]">
             {{ capitalize(tab.type) }}
           </span>
         </div>
       </div>
-
+      
       <!-- Empty state -->
-      <div
-        v-if="tabs.length === 0"
-        class="flex items-center justify-center p-4 text-gray-600 dark:text-[#9aa0a6]"
-        style="height: 100px"
-      >
+      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-600 dark:text-[#9aa0a6]" style="height: 100px">
         No results found
       </div>
     </div>
@@ -343,10 +338,6 @@ button {
   border-radius: 0.25rem;
 }
 
-.rounded-full {
-  border-radius: 9999px;
-}
-
 .font-medium {
   font-weight: 500;
 }
@@ -365,14 +356,18 @@ button {
 }
 
 /* Type badge styles */
+.rounded-full {
+  border-radius: 9999px;
+}
+
 .px-2 {
   padding-left: 0.5rem;
   padding-right: 0.5rem;
 }
 
-.py-1 {
-  padding-top: 0.25rem;
-  padding-bottom: 0.25rem;
+.py-0.5 {
+  padding-top: 0.125rem;
+  padding-bottom: 0.125rem;
 }
 
 .gap-2 {
@@ -430,8 +425,8 @@ button.flex {
 .dark\:text-\[#e8eaed\],
 .text-gray-600,
 .dark\:text-\[#e8eaed\],
-.bg-blue-100,
-.bg-blue-50,
+.bg-indigo-100,
+.bg-indigo-50,
 .dark\:bg-\[#3c4043\],
 .bg-gray-50,
 .dark\:hover\:bg-\[#35363a\],
@@ -456,10 +451,5 @@ button.flex {
 /* Add subtle shadow to the popup only in dark mode */
 .dark .shadow-md {
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Add styles for tab navigation */
-.space-x-2 > * + * {
-  margin-left: 0.5rem;
 }
 </style>

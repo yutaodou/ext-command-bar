@@ -10,9 +10,9 @@ export default defineConfig({
     disabled: true,
   },
   manifest: {
-    name: "Yes Commander",
-    description: "Yes Commander",
-    version: "0.0.4",
+    name: "Super Tab Switcher",
+    description: "Easily search tab/history/bookmark, and switch between tabs.",
+    version: "0.0.5",
     host_permissions: ["<all_urls>"],
     permissions: ["scripting", "tabs", "history", "bookmarks","search"],
     commands: {
