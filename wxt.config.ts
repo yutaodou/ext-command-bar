@@ -23,6 +23,20 @@ export default defineConfig({
           mac: "Command+K",
         },
       },
+      switchToPreviousTab: {
+        description: "Switch to previous tab",
+        suggested_key: {
+          default: "Alt+Left",
+          mac: "Alt+Left",
+        },
+      },
+      switchTabBack: {
+        description: "Switch back to the tab you came from",
+        suggested_key: {
+          default: "Alt+Right",
+          mac: "Alt+Right",
+        },
+      },
     },
   },
 });
