@@ -3,7 +3,7 @@ import { orderBy } from "lodash";
 import { isSystemPage } from "./utils";
 import { v4 as uuid } from "uuid";
 import { search, tokenize } from "./search";
-import { getFaviconBase64 } from "./faviconManager";
+import { faviconUrl, getFaviconBase64 } from "./faviconManager";
 
 const MAX_RESULTS = 5;
 
@@ -38,9 +38,9 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
   // Get options without favicons first
   const [tabOptions, bookmarkOptions, historyOptions] = await Promise.all([
-    getTabOptionsWithoutFavicons(),
-    getBookmarkOptionsWithoutFavicons(searchTerm),
-    getHistoryOptionsWithoutFavicons(searchTerm)
+    getTabOptions(),
+    getBookmarkOptions(searchTerm),
+    getHistoryOptions(searchTerm)
   ]);
 
   const options = [...tabOptions, ...bookmarkOptions, ...historyOptions] as FilterableOption[];
@@ -54,7 +54,7 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
   }
 
   // Only now populate favicons for the final results that will be displayed
-  await populateFaviconsForResults(finalResults);
+  // await populateFaviconsForResults(finalResults);
   return finalResults;
 };
 
@@ -114,7 +114,7 @@ const buildSearchCommandOptions = (searchTerm: string): SwitchOption => ({
   searchTerm,
 });
 
-const getHistoryOptionsWithoutFavicons = async (searchTerm: string): Promise<SwitchOption[]> => {
+const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
   const tokens = tokenize(searchTerm);
   if (!tokens) {
     return [];
@@ -133,12 +133,12 @@ const getHistoryOptionsWithoutFavicons = async (searchTerm: string): Promise<Swi
     type: "history" as const,
     title: item.title || "Untitled",
     url: item.url || "",
-    faviconData: "", // Will be populated later only if this option is selected for display
+    faviconData: faviconUrl(item.url),
     actionText: "Open Page",
   }));
 };
 
-const getBookmarkOptionsWithoutFavicons = async (searchTerm: string): Promise<SwitchOption[]> => {
+const getBookmarkOptions = async (searchTerm: string): Promise<SwitchOption[]> => {
   // Remove the searchTerm check so bookmarks are always loaded
   const bookmarks = await chrome.bookmarks.search({});
 
@@ -150,12 +150,12 @@ const getBookmarkOptionsWithoutFavicons = async (searchTerm: string): Promise<Sw
       type: "bookmark" as const,
       title: bookmark.title || "Untitled",
       url: bookmark.url || "",
-      faviconData: "", // Will be populated later only if this option is selected for display
+      faviconData: faviconUrl(bookmark.url),
       actionText: "Open Bookmark",
     }));
 };
 
-const getTabOptionsWithoutFavicons = async () => {
+const getTabOptions = async () => {
   const tabs = await chrome.tabs.query({ currentWindow: true, active: false });
 
   // Create options with tabs but without favicons
@@ -169,7 +169,7 @@ const getTabOptionsWithoutFavicons = async () => {
       type: "tab" as const,
       title: tab.title || "Untitled",
       url: tab.url || "",
-      faviconData: "", // Will be populated later only if this option is selected for display
+      faviconData: faviconUrl(tab.url),
       actionText: "Switch to Tab",
     }));
 };

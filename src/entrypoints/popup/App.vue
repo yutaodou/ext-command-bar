@@ -84,11 +84,11 @@ const debounce = (fn: Function, delay: number) => {
 // Update search handler to maintain current results until new ones arrive
 const handleSearch = async (term: string) => {
   const currentRequestId = ++searchRequestCounter.value;
-  if (!term.trim()) {
-    tabs.value = previousTabs.value;
-    focusedIndex.value = previousTabs.value.length > 0 ? 0 : -1;
-    return;
-  }
+  // if (!term.trim()) {
+  //   tabs.value = previousTabs.value;
+  //   focusedIndex.value = previousTabs.value.length > 0 ? 0 : -1;
+  //   return;
+  // }
 
   const response: any = await sendMessage("searchOptions", { term: term.trim() }, "background");
   if (currentRequestId === searchRequestCounter.value && response && Array.isArray(response.options)) {
@@ -268,11 +268,6 @@ onUnmounted(() => {
             {{ capitalize(tab.type) }}
           </span>
         </div>
-      </div>
-      
-      <!-- Empty state -->
-      <div v-if="tabs.length === 0" class="flex items-center justify-center p-4 text-gray-600 dark:text-[#9aa0a6]" style="height: 100px">
-        No results found
       </div>
     </div>
   </div>
