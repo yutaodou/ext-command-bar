@@ -56,9 +56,12 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
     return filterOptions.slice(0, maxResults);
   }
 
+  // Deduplicate options by URL, keeping the highest priority item
+  const dedupedOptions = deduplicateFilterOptions(filterOptions);
+
   const miniSearch = new MiniSearch({
     fields: ["id", "title", "url", "search", "hash"],
-    storeFields: ["id", "title", "url", "type", "search", "hash"],
+    storeFields: ["id", "title", "url", "type"],
     tokenize,
     processTerm,
     searchOptions: {
@@ -69,16 +72,20 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
         hash: 1,
       },
       combineWith: "AND",
-      fuzzy: 0.1
+      fuzzy: 0.1,
     },
   });
-  const docs = filterOptions.map(convertToDoc);
+  const docs = dedupedOptions.map(convertToDoc);
   miniSearch.addAll(docs);
+
   const searchResults = miniSearch.search(term);
+
+  // Create a map of original options for quick lookup
+  const optionsMap = new Map(dedupedOptions.map((opt) => [opt.id, opt]));
+
   const deduplicated = deduplicate(searchResults, keyExtractor);
   const sorted = deduplicated.sort(sortByType).slice(0, maxResults);
 
-  const optionsMap = new Map(filterOptions.map((opt) => [opt.id, opt]));
   return sorted.map((result) => optionsMap.get(result.id)!);
 };
 
@@ -104,7 +111,7 @@ const debug = (result: SearchResult[]) => {
 const keyExtractor = (item: SearchResult) => {
   const host = new URL(item.url).host;
   return `${host}-${item.title}`;
-}
+};
 
 const deduplicate = (result: SearchResult[], extractor: (item: SearchResult) => string): SearchResult[] => {
   const seen = new Set();
@@ -119,4 +126,22 @@ const deduplicate = (result: SearchResult[], extractor: (item: SearchResult) => 
   });
 
   return uniq;
+};
+
+const deduplicateFilterOptions = (filterOptions: FilterableOption[]): FilterableOption[] => {
+  const uniqueOptions = new Map<string, FilterableOption>();
+  filterOptions.forEach((option) => {
+    const url = new URL(option.url);
+    const baseUrl = `${url.origin}${url.pathname}`;
+    const existingOption = uniqueOptions.get(baseUrl);
+
+    if (
+      !existingOption ||
+      TYPE_ORDER[option.type as keyof typeof TYPE_ORDER] < TYPE_ORDER[existingOption.type as keyof typeof TYPE_ORDER]
+    ) {
+      uniqueOptions.set(baseUrl, option);
+    }
+  });
+
+  return Array.from(uniqueOptions.values());
 };
