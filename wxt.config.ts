@@ -26,15 +26,15 @@ export default defineConfig({
       switchToPreviousTab: {
         description: "Switch to previous tab",
         suggested_key: {
-          default: "Alt+Left",
-          mac: "Alt+Left",
+          default: "Ctrl+Left",
+          mac: "Command+Left",
         },
       },
       switchTabBack: {
-        description: "Switch back to the tab you came from",
+        description: "Switch tab back",
         suggested_key: {
-          default: "Alt+Right",
-          mac: "Alt+Right",
+          default: "Ctrl+Right",
+          mac: "Command+Right",
         },
       },
     },
