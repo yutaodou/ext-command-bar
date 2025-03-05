@@ -36,16 +36,16 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 };
 
 export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
-  // Get options without favicons first
+
   const [tabOptions, bookmarkOptions, historyOptions] = await Promise.all([
     getTabOptions(),
     getBookmarkOptions(searchTerm),
-    getHistoryOptions(searchTerm)
+    getHistoryOptions(searchTerm),
   ]);
 
   const options = [...tabOptions, ...bookmarkOptions, ...historyOptions] as FilterableOption[];
   const results = search(searchTerm, options, 100) as SwitchOption[];
-  
+
   let finalResults;
   if (results.length < MAX_RESULTS && searchTerm.trim()) {
     finalResults = [...results, buildSearchCommandOptions(searchTerm)];
@@ -65,7 +65,7 @@ async function populateFaviconsForResults(results: SwitchOption[]): Promise<void
   const promises = results.map(async (option) => {
     try {
       // Skip command options as they use emoji icons
-      if (option.type === 'command') {
+      if (option.type === "command") {
         return;
       }
 
@@ -75,7 +75,7 @@ async function populateFaviconsForResults(results: SwitchOption[]): Promise<void
 
       // Get favicon base64 data
       const favicon = await getFaviconBase64(option.url);
-      
+
       // For tab options, try to use the tab's native favicon as fallback
       if (!favicon && isTabOption(option) && option.tabId) {
         // Get the tab to access its native favicon
@@ -89,7 +89,7 @@ async function populateFaviconsForResults(results: SwitchOption[]): Promise<void
             }
           }
         } catch (error) {
-          console.error('Error getting tab favicon:', error);
+          console.error("Error getting tab favicon:", error);
         }
       }
 
@@ -98,7 +98,7 @@ async function populateFaviconsForResults(results: SwitchOption[]): Promise<void
         option.faviconData = favicon;
       }
     } catch (error) {
-      console.error('Error loading favicon:', error);
+      console.error("Error loading favicon:", error);
     }
   });
 
@@ -119,9 +119,9 @@ const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> =>
   if (!tokens) {
     return [];
   }
-  const oneWeekAgo = new Date().getTime() - 28 * 86400 * 1000;
+  const startTime = new Date().getTime() - 28 * 86400 * 1000;
   const results = await Promise.all(
-    tokens.map((token) => chrome.history.search({ text: token, maxResults: 100, startTime: oneWeekAgo }))
+    tokens.map((token) => chrome.history.search({ text: token, maxResults: 100, startTime }))
   );
 
   const history = results.flatMap((item) => item);
@@ -133,7 +133,7 @@ const getHistoryOptions = async (searchTerm: string): Promise<SwitchOption[]> =>
     type: "history" as const,
     title: item.title || "Untitled",
     url: item.url || "",
-    faviconData: faviconUrl(item.url),
+    faviconData: faviconUrl(item.url!),
     actionText: "Open Page",
   }));
 };
@@ -150,7 +150,7 @@ const getBookmarkOptions = async (searchTerm: string): Promise<SwitchOption[]> =
       type: "bookmark" as const,
       title: bookmark.title || "Untitled",
       url: bookmark.url || "",
-      faviconData: faviconUrl(bookmark.url),
+      faviconData: faviconUrl(bookmark.url!),
       actionText: "Open Bookmark",
     }));
 };
@@ -169,7 +169,7 @@ const getTabOptions = async () => {
       type: "tab" as const,
       title: tab.title || "Untitled",
       url: tab.url || "",
-      faviconData: faviconUrl(tab.url),
+      faviconData: tab.favIconUrl,
       actionText: "Switch to Tab",
     }));
 };
