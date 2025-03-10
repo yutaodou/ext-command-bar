@@ -27,16 +27,9 @@ export default defineConfig({
         description: "Switch to previous tab",
         suggested_key: {
           default: "Ctrl+Left",
-          mac: "Command+Left",
+          mac: "Command+Up",
         },
-      },
-      switchTabBack: {
-        description: "Switch tab back",
-        suggested_key: {
-          default: "Ctrl+Right",
-          mac: "Command+Right",
-        },
-      },
+      }
     },
   },
 });
