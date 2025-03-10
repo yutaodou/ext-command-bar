@@ -1,5 +1,6 @@
 import { FilterableOption } from "@/types";
 import MiniSearch, { SearchResult } from "minisearch";
+import { toPinyin, containsChinese } from "./pinyinUtils";
 
 const TYPE_ORDER = {
   tab: 0,
@@ -24,8 +25,8 @@ const generateNGrams = (str: string, minGram = 2, maxGram = 3): string[] => {
   }
   return ngrams;
 };
-// Process each token and generate additional n-grams
 
+// Process each token and generate additional n-grams
 const processTerm = (term: string, fieldName?: string): string | string[] => {
   if (!term) {
     return [];
@@ -40,15 +41,23 @@ export const tokenize = (text: string, fieldName?: string): string[] => {
 
   const normalizedText = text.toLowerCase();
 
-  return (
-    normalizedText
-      .split(/[\s\-_.,!?;:'"()\[\]{}\/\\]+/)
-      // Split between ASCII and non-ASCII character sequences
-      .flatMap((token) => token.split(/(?=[^\x00-\x7F]+)|(?<=[^\x00-\x7F]+)(?=[a-z0-9])/i))
-      // Remove empty tokens
-      .filter((token) => token.length > 0)
-      .filter((token) => !/^\d+$/.test(token))
-  );
+  if (fieldName === 'title' && containsChinese(normalizedText)) {
+    const pinyinText = toPinyin(normalizedText).toLowerCase();
+    const originalTokens = tokenizeText(normalizedText);
+    const pinyinTokens = tokenizeText(pinyinText);
+    
+    return [...new Set([...originalTokens, ...pinyinTokens])];
+  }
+  
+  return tokenizeText(normalizedText);
+};
+
+const tokenizeText = (normalizedText: string): string[] => {
+  return normalizedText
+    .split(/[\s\-_.,!?;:'"()\[\]{}\/\\]+/)
+    .flatMap((token) => token.split(/(?=[^\x00-\x7F]+)|(?<=[^\x00-\x7F]+)(?=[a-z0-9])/i))
+    .filter((token) => token.length > 0)
+    .filter((token) => !/^\d+$/.test(token));
 };
 
 export const search = (term: string, filterOptions: FilterableOption[], maxResults: number = 10) => {
@@ -56,8 +65,11 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
     return filterOptions.slice(0, maxResults);
   }
 
-  // Deduplicate options by URL, keeping the highest priority item
   const dedupedOptions = deduplicateFilterOptions(filterOptions);
+  
+  const docsWithPinyin = dedupedOptions.map(option => {
+    return convertToDoc(option);
+  });
 
   const miniSearch = new MiniSearch({
     fields: ["id", "title", "url", "search", "hash"],
@@ -75,10 +87,19 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
       fuzzy: 0.1,
     },
   });
-  const docs = dedupedOptions.map(convertToDoc);
-  miniSearch.addAll(docs);
-
-  const searchResults = miniSearch.search(term);
+  
+  miniSearch.addAll(docsWithPinyin);
+  
+  // If the search term contains Chinese, also search its pinyin version
+  let searchResults: SearchResult[] = [];
+  if (containsChinese(term)) {
+    const pinyinTerm = toPinyin(term).toLowerCase();
+    searchResults = miniSearch.search(pinyinTerm);
+  } 
+  
+  // Merge with results from original search term
+  const originalResults = miniSearch.search(term);
+  searchResults = mergeResults([...searchResults, ...originalResults]);
 
   // Create a map of original options for quick lookup
   const optionsMap = new Map(dedupedOptions.map((opt) => [opt.id, opt]));
@@ -87,6 +108,20 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
   const sorted = deduplicated.sort(sortByType).slice(0, maxResults);
 
   return sorted.map((result) => optionsMap.get(result.id)!);
+};
+
+// Merge search results, prioritizing higher scores
+const mergeResults = (results: SearchResult[]): SearchResult[] => {
+  const merged = new Map<string, SearchResult>();
+  
+  results.forEach(result => {
+    const existing = merged.get(result.id);
+    if (!existing || result.score > existing.score) {
+      merged.set(result.id, result);
+    }
+  });
+  
+  return Array.from(merged.values());
 };
 
 const convertToDoc = (option: FilterableOption) => {

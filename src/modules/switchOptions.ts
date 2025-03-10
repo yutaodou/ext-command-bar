@@ -1,9 +1,9 @@
-import { FilterableOption, HistoryOption, SelectOptionMessage, SwitchOption, TabOption } from "@/types";
+import { FilterableOption, SelectOptionMessage, SwitchOption, TabOption } from "@/types";
 import { orderBy } from "lodash";
-import { isSystemPage } from "./utils";
 import { v4 as uuid } from "uuid";
-import { search, tokenize } from "./search";
 import { faviconUrl, getFaviconBase64 } from "./faviconManager";
+import { search, tokenize } from "./search";
+import { isSystemPage } from "./utils";
 
 const MAX_RESULTS = 5;
 
@@ -36,7 +36,6 @@ export const handleSelectOption = async (message: SelectOptionMessage) => {
 };
 
 export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchOption[]> => {
-
   const [tabOptions, bookmarkOptions, historyOptions] = await Promise.all([
     getTabOptions(),
     getBookmarkOptions(searchTerm),
@@ -53,8 +52,6 @@ export const getSwitchOptions = async (searchTerm: string = ""): Promise<SwitchO
     finalResults = results.slice(0, MAX_RESULTS);
   }
 
-  // Only now populate favicons for the final results that will be displayed
-  // await populateFaviconsForResults(finalResults);
   return finalResults;
 };
 
