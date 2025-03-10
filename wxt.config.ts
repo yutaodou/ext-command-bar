@@ -14,7 +14,7 @@ export default defineConfig({
     description: "Easily search tab/history/bookmark with pinyin support, and switch between tabs.",
     version: "0.0.6",
     host_permissions: ["<all_urls>"],
-    permissions: ["scripting", "tabs", "history", "bookmarks", "search", "storage"],
+    permissions: ["scripting", "tabs", "history", "bookmarks", "search"],
     commands: {
       toggleCommandBar: {
         description: "Toggle the command bar",
