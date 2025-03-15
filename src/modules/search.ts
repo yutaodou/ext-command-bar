@@ -41,23 +41,34 @@ export const tokenize = (text: string, fieldName?: string): string[] => {
 
   const normalizedText = text.toLowerCase();
 
-  if (fieldName === 'title' && containsChinese(normalizedText)) {
+  if (fieldName === "title" && containsChinese(normalizedText)) {
     const pinyinText = toPinyin(normalizedText).toLowerCase();
     const originalTokens = tokenizeText(normalizedText);
     const pinyinTokens = tokenizeText(pinyinText);
-    
+
     return [...new Set([...originalTokens, ...pinyinTokens])];
   }
-  
+
   return tokenizeText(normalizedText);
 };
 
+/**
+ * Tokenizes a normalized text string into an array of words and terms.
+ * 
+ * @param normalizedText - The text to tokenize, already normalized
+ * @returns An array of tokens extracted from the text
+ * 
+ * The tokenization process works as follows:
+ * 1. Splits the text on common separators (spaces, punctuation, brackets, etc.)
+ * 2. Further splits tokens at boundaries between non-ASCII characters and alphanumeric characters
+ *    to properly handle mixed scripts (e.g., Latin and CJK characters)
+ * 3. Filters out empty tokens
+ */
 const tokenizeText = (normalizedText: string): string[] => {
   return normalizedText
     .split(/[\s\-_.,!?;:'"()\[\]{}\/\\]+/)
     .flatMap((token) => token.split(/(?=[^\x00-\x7F]+)|(?<=[^\x00-\x7F]+)(?=[a-z0-9])/i))
-    .filter((token) => token.length > 0)
-    .filter((token) => !/^\d+$/.test(token));
+    .filter((token) => token.length > 0);
 };
 
 export const search = (term: string, filterOptions: FilterableOption[], maxResults: number = 10) => {
@@ -66,14 +77,14 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
   }
 
   const dedupedOptions = deduplicateFilterOptions(filterOptions);
-  
-  const docsWithPinyin = dedupedOptions.map(option => {
+
+  const docsWithPinyin = dedupedOptions.map((option) => {
     return convertToDoc(option);
   });
 
   const miniSearch = new MiniSearch({
     fields: ["id", "title", "url", "search", "hash"],
-    storeFields: ["id", "title", "url", "type"],
+    storeFields: ["id", "title", "url", "search", "hash", "type"],
     tokenize,
     processTerm,
     searchOptions: {
@@ -87,16 +98,16 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
       fuzzy: 0.1,
     },
   });
-  
+
   miniSearch.addAll(docsWithPinyin);
-  
+
   // If the search term contains Chinese, also search its pinyin version
   let searchResults: SearchResult[] = [];
   if (containsChinese(term)) {
     const pinyinTerm = toPinyin(term).toLowerCase();
     searchResults = miniSearch.search(pinyinTerm);
-  } 
-  
+  }
+
   // Merge with results from original search term
   const originalResults = miniSearch.search(term);
   searchResults = mergeResults([...searchResults, ...originalResults]);
@@ -113,14 +124,14 @@ export const search = (term: string, filterOptions: FilterableOption[], maxResul
 // Merge search results, prioritizing higher scores
 const mergeResults = (results: SearchResult[]): SearchResult[] => {
   const merged = new Map<string, SearchResult>();
-  
-  results.forEach(result => {
+
+  results.forEach((result) => {
     const existing = merged.get(result.id);
     if (!existing || result.score > existing.score) {
       merged.set(result.id, result);
     }
   });
-  
+
   return Array.from(merged.values());
 };
 
