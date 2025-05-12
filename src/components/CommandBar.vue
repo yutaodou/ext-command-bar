@@ -2,7 +2,7 @@
 import { nextTick, onMounted, onUnmounted, ref, watch } from "vue";
 import { sendMessage, onMessage } from "webext-bridge/popup";
 import { SwitchOption } from "~/types";
-import capitalize from  "lodash/capitalize";
+import capitalize from "lodash/capitalize";
 import "~/assets/tailwind.css";
 
 const searchQuery = ref("");
@@ -58,7 +58,8 @@ const handleKeyDown = (event: KeyboardEvent) => {
           focusedIndex.value = tabs.value.length - 1;
         } else if (focusedIndex.value > 0) {
           focusedIndex.value--;
-        } else { // focusedIndex.value is -1 (search input focused)
+        } else {
+          // focusedIndex.value is -1 (search input focused)
           focusedIndex.value = tabs.value.length - 1; // focus last item
         }
         // Use nextTick to ensure reliable focus and scrolling
@@ -96,12 +97,6 @@ const debounce = (fn: Function, delay: number) => {
 // Update search handler to maintain current results until new ones arrive
 const handleSearch = async (term: string) => {
   const currentRequestId = ++searchRequestCounter.value;
-  // if (!term.trim()) {
-  //   tabs.value = previousTabs.value;
-  //   focusedIndex.value = previousTabs.value.length > 0 ? 0 : -1;
-  //   return;
-  // }
-
   const response: any = await sendMessage("searchOptions", { term: term.trim() }, "background");
   if (currentRequestId === searchRequestCounter.value && response && Array.isArray(response.options)) {
     await nextTick(() => {
@@ -115,10 +110,8 @@ const handleSearch = async (term: string) => {
   }
 };
 
-// Optimize debounce delay
 const debouncedSearch = debounce(handleSearch, 150);
 
-// Watch for changes in searchQuery
 watch(searchQuery, (newValue) => {
   debouncedSearch(newValue);
 });
@@ -132,24 +125,28 @@ const scrollToFocusedItem = () => {
 
   const container = listContainerRef.value;
   const focusedItemElement = container.children[focusedIndex.value] as HTMLElement;
-
   if (focusedItemElement) {
-    focusedItemElement.scrollIntoView({ block: 'nearest' });
+    const containerRect = container.getBoundingClientRect();
+    const itemRect = focusedItemElement.getBoundingClientRect();
+
+    if (itemRect.top < containerRect.top || itemRect.bottom > containerRect.bottom) {
+      focusedItemElement.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
   }
 };
 
-// Add method to clear search input
 const clearSearch = () => {
   searchQuery.value = "";
   searchInput.value?.focus();
 };
 
 onMounted(() => {
-  // Focus search input and load initial options when component mounts
   searchInput.value?.focus();
   loadInitialOptions();
 
-  // Connect to background script to track popup state
   try {
     // @ts-ignore - browser is available in extension context
     port.value = chrome.runtime.connect({ name: "popup-connection" });
@@ -157,14 +154,12 @@ onMounted(() => {
     console.error("Failed to connect port:", error);
   }
 
-  // Listen for closePopup message from background
   onMessage("closePopup", () => {
     window.close();
   });
 });
 
 onUnmounted(() => {
-  // Disconnect port when component is unmounted
   if (port.value) {
     try {
       port.value.disconnect();
@@ -176,7 +171,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="bg-white dark:bg-[#292a2d] rounded-xl dark:shadow-md" style="width: 600px; min-height: 400px;">
+  <div
+    class="bg-white dark:bg-[#292a2d] rounded-xl dark:shadow-md"
+    style="width: 600px; overflow-y: hidden"
+  >
     <div class="flex items-center" style="padding: 8px 12px">
       <div class="text-gray-500 dark:text-[#9aa0a6]">
         <svg
@@ -208,7 +206,7 @@ onUnmounted(() => {
         @keydown="handleKeyDown"
       />
       <!-- Clear icon -->
-      <button 
+      <button
         v-if="searchQuery"
         class="text-gray-500 dark:text-[#9aa0a6] hover:text-gray-700 dark:hover:text-[#e8eaed]"
         @click="clearSearch"
@@ -228,16 +226,16 @@ onUnmounted(() => {
         </svg>
       </button>
     </div>
-    
+
     <!-- Tab List -->
-    <div ref="listContainerRef" style="max-height: 400px" class="overflow-y-auto pt-2">
+    <div ref="listContainerRef" style="height: 340px; overflow-y: scroll" class="pt-2">
       <div
         v-for="(tab, index) in tabs"
         :key="index"
         :class="[
           'flex items-center cursor-pointer transition-colors duration-150 rounded-lg border',
-          focusedIndex === index 
-            ? 'bg-indigo-50 border-indigo-200 dark:bg-[#3c4043] dark:border-[#4c5055]' 
+          focusedIndex === index
+            ? 'bg-indigo-50 border-indigo-200 dark:bg-[#3c4043] dark:border-[#4c5055]'
             : 'border-gray-200 hover:bg-gray-50 hover:border-gray-300 dark:border-[#35363a] dark:hover:bg-[#35363a] dark:hover:border-[#45464a]',
         ]"
         style="padding: 8px 12px; margin: 4px 8px"
@@ -247,27 +245,27 @@ onUnmounted(() => {
       >
         <!-- Left side - Icon -->
         <div class="flex-shrink-0 flex items-center justify-center mr-3" style="height: 40px; width: 40px">
-          <div 
-            v-if="tab.type === 'command'" 
+          <div
+            v-if="tab.type === 'command'"
             class="text-2xl flex items-center justify-center"
             style="width: 32px; height: 32px"
           >
             {{ tab.icon }}
           </div>
           <!-- Update the image to use faviconData instead of favIconUrl -->
-          <img 
-            v-else-if="tab.faviconData" 
+          <img
+            v-else-if="tab.faviconData"
             :src="tab.faviconData"
-            style="width: 32px; height: 32px; object-fit: contain" 
+            style="width: 32px; height: 32px; object-fit: contain"
             alt=""
             class="rounded"
             loading="lazy"
             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
           />
-          <div 
+          <div
             v-else
             class="text-2xl flex items-center justify-center bg-gray-100 dark:bg-[#3b3c3f] rounded-md"
-            style="width: 32px; height: 32px; display: none;"
+            style="width: 32px; height: 32px; display: none"
           >
             <span v-if="tab.type === 'tab'">📄</span>
             <span v-else-if="tab.type === 'history'">🕒</span>
@@ -275,23 +273,25 @@ onUnmounted(() => {
             <span v-else>📄</span>
           </div>
         </div>
-        
+
         <!-- Right side - Text content -->
         <div class="flex-1 min-w-0 flex flex-col justify-center">
           <!-- Title -->
           <div class="text-gray-900 dark:text-[#e8eaed] truncate font-medium text-left">
             {{ tab.type === "command" ? tab.name : tab.title || "Untitled Tab" }}
           </div>
-          
+
           <!-- URL/Subtitle -->
           <div class="text-gray-600 dark:text-[#9aa0a6] truncate text-xs text-left">
-            {{ tab.type === 'command' ? tab.actionText : tab.url || tab.actionText || "" }}
+            {{ tab.type === "command" ? tab.actionText : tab.url || tab.actionText || "" }}
           </div>
         </div>
-        
+
         <!-- Type badge (with light grey color) -->
         <div class="flex-shrink-0 self-center ml-2">
-          <span class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 border border-gray-200 dark:bg-[#3b3c3f] dark:border-[#4c5055] text-gray-700 dark:text-[#8ab4f8]">
+          <span
+            class="text-xs px-2 py-1 rounded-md font-medium bg-gray-100 border border-gray-200 dark:bg-[#3b3c3f] dark:border-[#4c5055] text-gray-700 dark:text-[#8ab4f8]"
+          >
             {{ capitalize(tab.type) }}
           </span>
         </div>
