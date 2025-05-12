@@ -12,7 +12,7 @@ export default defineConfig({
   manifest: {
     name: "Super Tab Switcher",
     description: "Easily search tab/history/bookmark with pinyin support, and switch between tabs.",
-    version: "0.0.7",
+    version: "0.0.8",
     host_permissions: ["<all_urls>"],
     permissions: ["scripting", "tabs", "history", "bookmarks", "search"],
     commands: {
