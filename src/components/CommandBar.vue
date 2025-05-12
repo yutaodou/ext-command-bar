@@ -8,6 +8,7 @@ import "~/assets/tailwind.css";
 const searchQuery = ref("");
 const focusedIndex = ref(-1);
 const searchInput = ref<HTMLInputElement | null>(null);
+const listContainerRef = ref<HTMLDivElement | null>(null); // Added ref for the list container
 const tabs = ref<SwitchOption[]>([]);
 const isComposing = ref(false);
 const searchRequestCounter = ref(0);
@@ -41,22 +42,33 @@ const handleKeyDown = (event: KeyboardEvent) => {
       break;
     case "ArrowDown":
       event.preventDefault();
-      if (focusedIndex.value === tabs.value.length - 1) {
-        focusedIndex.value = 0;
-      } else {
-        focusedIndex.value++;
+      if (tabs.value.length > 0) {
+        if (focusedIndex.value === tabs.value.length - 1) {
+          focusedIndex.value = 0;
+        } else {
+          focusedIndex.value++;
+        }
+        nextTick(scrollToFocusedItem);
       }
       break;
     case "ArrowUp":
       event.preventDefault();
-      if (focusedIndex.value === 0) {
-        focusedIndex.value = tabs.value.length - 1;
-        // Use nextTick to ensure reliable focus
+      if (tabs.value.length > 0) {
+        if (focusedIndex.value === 0) {
+          focusedIndex.value = tabs.value.length - 1;
+        } else if (focusedIndex.value > 0) {
+          focusedIndex.value--;
+        } else { // focusedIndex.value is -1 (search input focused)
+          focusedIndex.value = tabs.value.length - 1; // focus last item
+        }
+        // Use nextTick to ensure reliable focus and scrolling
         nextTick(() => {
-          searchInput.value?.focus();
+          // If moving from search input to last item, ensure search input doesn't steal focus back immediately
+          if (focusedIndex.value < 0 && searchInput.value) {
+            searchInput.value.focus();
+          }
+          scrollToFocusedItem();
         });
-      } else if (focusedIndex.value > 0) {
-        focusedIndex.value--;
       }
       break;
     case "Enter":
@@ -110,6 +122,21 @@ const debouncedSearch = debounce(handleSearch, 150);
 watch(searchQuery, (newValue) => {
   debouncedSearch(newValue);
 });
+
+watch(focusedIndex, () => {
+  nextTick(scrollToFocusedItem);
+});
+
+const scrollToFocusedItem = () => {
+  if (!listContainerRef.value || focusedIndex.value < 0) return;
+
+  const container = listContainerRef.value;
+  const focusedItemElement = container.children[focusedIndex.value] as HTMLElement;
+
+  if (focusedItemElement) {
+    focusedItemElement.scrollIntoView({ block: 'nearest' });
+  }
+};
 
 // Add method to clear search input
 const clearSearch = () => {
@@ -203,7 +230,7 @@ onUnmounted(() => {
     </div>
     
     <!-- Tab List -->
-    <div style="max-height: 400px" class="overflow-y-auto pt-2">
+    <div ref="listContainerRef" style="max-height: 400px" class="overflow-y-auto pt-2">
       <div
         v-for="(tab, index) in tabs"
         :key="index"

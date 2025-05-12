@@ -4,7 +4,7 @@ import { v4 as uuid } from "uuid";
 import { search, tokenize } from "./search";
 import { isSystemPage } from "./utils";
 
-const MAX_RESULTS = 5;
+const MAX_RESULTS = 10;
 
 export const isTabOption = (option: SwitchOption): option is TabOption => {
   return option.type === "tab";
